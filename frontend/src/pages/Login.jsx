@@ -2,46 +2,55 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const handleLogin = () => {
-    alert("Login logic will be added later");
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
+
+    // TEMPORARY ROLE LOGIC (Frontend only)
+    if (email.includes("admin")) {
+      navigate("/admin-dashboard");
+    } else if (email.includes("hospital")) {
+      navigate("/hospital-dashboard");
+    } else {
+      navigate("/donor-dashboard");
+    }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2>Blood Donor Finder</h2>
+        <h2>Login</h2>
 
         <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
           style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
+          style={styles.input}
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={styles.input}
         />
 
-        <button onClick={handleLogin} style={styles.button}>
+        <button style={styles.button} onClick={handleLogin}>
           Login
         </button>
 
         <p style={{ marginTop: "15px" }}>
-          Don’t have an account?{" "}
-          <span
-            style={styles.signup}
-            onClick={() => navigate("/register")}
-          >
-            Sign up
+          New user?{" "}
+          <span style={styles.link} onClick={() => navigate("/register")}>
+            Register here
           </span>
         </p>
       </div>
@@ -61,7 +70,7 @@ const styles = {
     background: "#fff",
     padding: "30px",
     borderRadius: "10px",
-    width: "320px",
+    width: "350px",
     textAlign: "center",
   },
   input: {
@@ -76,8 +85,9 @@ const styles = {
     color: "#fff",
     border: "none",
     cursor: "pointer",
+    marginTop: "10px",
   },
-  signup: {
+  link: {
     color: "#e53935",
     cursor: "pointer",
     fontWeight: "bold",

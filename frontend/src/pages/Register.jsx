@@ -1,33 +1,37 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState("donor");
-  const [gender, setGender] = useState("");
-  const [bloodGroup, setBloodGroup] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [form, setForm] = useState({
+    role: "donor",
+    name: "",
+    email: "",
+    password: "",
+    age: "",
+    gender: "",
+    blood_group: "",
+    mobile: "",
+    health_status: "",
+    last_donation_date: "",
+    latitude: "",
+    longitude: ""
+  });
 
-  const handleRegister = () => {
-    alert("Registration successful (API will be added later)");
-    navigate("/");
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const getLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
+  const handleSubmit = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/auth/register", form);
+      alert("Registration successful");
+      navigate("/");
+    } catch (err) {
+      alert("Registration failed");
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLatitude(position.coords.latitude);
-        setLongitude(position.coords.longitude);
-      },
-      () => alert("Unable to fetch location")
-    );
   };
 
   return (
@@ -35,151 +39,51 @@ const Register = () => {
       <div style={styles.card}>
         <h2>Register</h2>
 
-        {/* Role */}
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          style={styles.input}
-        >
+        <select name="role" onChange={handleChange}>
           <option value="donor">Donor</option>
           <option value="hospital">Hospital</option>
           <option value="bloodbank">Blood Bank</option>
         </select>
 
-        {/* Common Fields */}
-        <input style={styles.input} placeholder="Name" />
-        <input style={styles.input} placeholder="Email ID" />
-        <input style={styles.input} placeholder="Mobile Number" />
-        <input style={styles.input} placeholder="Password" />
+        <input name="name" placeholder="Name" onChange={handleChange} />
+        <input name="email" placeholder="Email" onChange={handleChange} />
+        <input name="password" type="password" placeholder="Password" onChange={handleChange} />
+        <input name="mobile" placeholder="Mobile" onChange={handleChange} />
+        <input name="age" placeholder="Age" onChange={handleChange} />
 
-        {/* Donor Fields */}
-        {role === "donor" && (
-          <>
-            <input style={styles.input} placeholder="Age" />
+        <select name="gender" onChange={handleChange}>
+          <option value="">Select Gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
 
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              style={styles.input}
-            >
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+        <select name="blood_group" onChange={handleChange}>
+          <option value="">Blood Group</option>
+          <option>A+</option><option>A-</option>
+          <option>B+</option><option>B-</option>
+          <option>AB+</option><option>AB-</option>
+          <option>O+</option><option>O-</option>
+        </select>
 
-            <select
-              value={bloodGroup}
-              onChange={(e) => setBloodGroup(e.target.value)}
-              style={styles.input}
-            >
-              <option value="">Select Blood Group</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-            </select>
+        <input name="health_status" placeholder="Health Status" onChange={handleChange} />
+        <input name="last_donation_date" type="date" onChange={handleChange} />
+        <input name="latitude" placeholder="Latitude" onChange={handleChange} />
+        <input name="longitude" placeholder="Longitude" onChange={handleChange} />
 
-            <input style={styles.input} placeholder="Last Donation Date" />
+        <button onClick={handleSubmit} style={styles.button}>Sign Up</button>
 
-            <input
-              style={styles.input}
-              placeholder="Latitude"
-              value={latitude}
-              readOnly
-            />
-            <input
-              style={styles.input}
-              placeholder="Longitude"
-              value={longitude}
-              readOnly
-            />
-
-            <button type="button" style={styles.locationBtn} onClick={getLocation}>
-              Get Current Location
-            </button>
-          </>
-        )}
-
-        {/* Hospital Fields */}
-        {role === "hospital" && (
-          <>
-            <input style={styles.input} placeholder="Hospital Name" />
-            <input style={styles.input} placeholder="Hospital Location" />
-          </>
-        )}
-
-        {/* Blood Bank Fields */}
-        {role === "bloodbank" && (
-          <>
-            <input style={styles.input} placeholder="Blood Bank Name" />
-            <input style={styles.input} placeholder="Blood Bank Location" />
-          </>
-        )}
-
-        <button style={styles.button} onClick={handleRegister}>
-          Sign Up
-        </button>
-
-        <p style={{ marginTop: "15px" }}>
-          Already have an account?{" "}
-          <span style={styles.login} onClick={() => navigate("/")}>
-            Login
-          </span>
-        </p>
+        <p onClick={() => navigate("/")} style={styles.link}>Already have account? Login</p>
       </div>
     </div>
   );
 };
 
-/* ===== STYLES ===== */
 const styles = {
-  container: {
-    height: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#e53935",
-  },
-  card: {
-    background: "#fff",
-    padding: "30px",
-    borderRadius: "10px",
-    width: "360px",
-    textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    padding: "10px",
-    margin: "8px 0",
-  },
-  button: {
-    width: "100%",
-    padding: "10px",
-    backgroundColor: "#e53935",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    marginTop: "10px",
-  },
-  locationBtn: {
-    width: "100%",
-    padding: "10px",
-    backgroundColor: "#555",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer",
-    marginBottom: "10px",
-  },
-  login: {
-    color: "#e53935",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
+  container: { height: "100vh", display: "flex", justifyContent: "center", alignItems: "center", background: "#e53935" },
+  card: { background: "#fff", padding: 20, width: 350, borderRadius: 10 },
+  button: { width: "100%", padding: 10, marginTop: 10, background: "#e53935", color: "#fff", border: "none" },
+  link: { color: "#e53935", marginTop: 10, cursor: "pointer", textAlign: "center" }
 };
 
 export default Register;

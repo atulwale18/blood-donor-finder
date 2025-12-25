@@ -1,19 +1,13 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = () => {
-    if (username === "donor") {
-      alert("Login as Donor");
-    } else if (username === "hospital") {
-      alert("Login as Hospital");
-    } else if (username === "admin") {
-      alert("Login as Admin");
-    } else {
-      alert("Invalid user");
-    }
+    alert("Login logic will be added later");
   };
 
   return (
@@ -43,7 +37,10 @@ const Login = () => {
 
         <p style={{ marginTop: "15px" }}>
           Don’t have an account?{" "}
-          <span style={styles.signup} onClick={() => alert("Go to Sign Up")}>
+          <span
+            style={styles.signup}
+            onClick={() => navigate("/register")}
+          >
             Sign up
           </span>
         </p>
@@ -52,7 +49,6 @@ const Login = () => {
   );
 };
 
-/* ===== STYLES (DO NOT MOVE) ===== */
 const styles = {
   container: {
     height: "100vh",

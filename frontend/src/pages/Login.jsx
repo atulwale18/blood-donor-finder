@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -7,19 +8,24 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      alert("Please enter email and password");
-      return;
-    }
+  const handleLogin = async () => {
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        email: email,
+        password: password
+      });
 
-    // TEMPORARY ROLE LOGIC (Frontend only)
-    if (email.includes("admin")) {
-      navigate("/admin-dashboard");
-    } else if (email.includes("hospital")) {
-      navigate("/hospital-dashboard");
-    } else {
-      navigate("/donor-dashboard");
+      // ✅ SAVE LOGGED-IN USER INFO
+      localStorage.setItem("user_id", res.data.user.user_id);
+      localStorage.setItem("role", res.data.user.role);
+
+      const role = res.data.user.role;
+
+      if (role === "donor") navigate("/donor");
+      else navigate("/hospital");
+
+    } catch (err) {
+      alert("Invalid credentials");
     }
   };
 
@@ -29,30 +35,32 @@ const Login = () => {
         <h2>Login</h2>
 
         <input
-          style={styles.input}
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          style={styles.input}
         />
 
         <input
-          style={styles.input}
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          style={styles.input}
         />
 
-        <button style={styles.button} onClick={handleLogin}>
+        <button onClick={handleLogin} style={styles.btn}>
           Login
         </button>
 
-        <p style={{ marginTop: "15px" }}>
-          New user?{" "}
-          <span style={styles.link} onClick={() => navigate("/register")}>
-            Register here
-          </span>
+        {/* ✅ SIGN UP OPTION */}
+        <p
+          style={styles.signupText}
+          onClick={() => navigate("/register")}
+        >
+          Don’t have an account? <span style={styles.signupLink}>Sign up</span>
         </p>
+
       </div>
     </div>
   );
@@ -64,34 +72,37 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#e53935",
+    background: "#e53935"
   },
   card: {
+    width: 320,
+    padding: 20,
     background: "#fff",
-    padding: "30px",
-    borderRadius: "10px",
-    width: "350px",
-    textAlign: "center",
+    borderRadius: 8
   },
   input: {
     width: "100%",
-    padding: "10px",
-    margin: "10px 0",
+    padding: 10,
+    margin: "6px 0"
   },
-  button: {
+  btn: {
     width: "100%",
-    padding: "10px",
-    backgroundColor: "#e53935",
+    padding: 10,
+    marginTop: 10,
+    background: "#e53935",
     color: "#fff",
     border: "none",
-    cursor: "pointer",
-    marginTop: "10px",
+    cursor: "pointer"
   },
-  link: {
+  signupText: {
+    marginTop: 12,
+    textAlign: "center",
+    cursor: "pointer"
+  },
+  signupLink: {
     color: "#e53935",
-    cursor: "pointer",
-    fontWeight: "bold",
-  },
+    fontWeight: "bold"
+  }
 };
 
 export default Login;

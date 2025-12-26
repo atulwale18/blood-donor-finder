@@ -1,5 +1,6 @@
 const db = require("../config/db");
 
+// LOGIN
 exports.login = (req, res) => {
   const { email, password } = req.body;
 
@@ -11,7 +12,8 @@ exports.login = (req, res) => {
 
   db.query(sql, [email, password], (err, result) => {
     if (err) {
-      return res.status(500).json({ error: err.message });
+      console.error(err);
+      return res.status(500).json({ error: err.sqlMessage });
     }
 
     if (result.length === 0) {
@@ -25,6 +27,7 @@ exports.login = (req, res) => {
   });
 };
 
+// REGISTER
 exports.register = (req, res) => {
   const {
     name,
@@ -35,7 +38,6 @@ exports.register = (req, res) => {
     gender,
     blood_group,
     mobile,
-    health_status,
     last_donation_date,
     latitude,
     longitude
@@ -43,8 +45,8 @@ exports.register = (req, res) => {
 
   const sql = `
     INSERT INTO users
-    (name, email, password, role, age, gender, blood_group, mobile, health_status, last_donation_date, latitude, longitude)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (name, email, password, role, age, gender, blood_group, mobile, last_donation_date, latitude, longitude)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -58,14 +60,14 @@ exports.register = (req, res) => {
       gender,
       blood_group,
       mobile,
-      health_status,
       last_donation_date,
       latitude,
       longitude
     ],
     (err, result) => {
       if (err) {
-        return res.status(500).json({ error: err.message });
+        console.error(err);
+        return res.status(500).json({ error: err.sqlMessage });
       }
 
       res.json({ message: "Registration successful" });

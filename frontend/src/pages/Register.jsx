@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
+  const [role, setRole] = useState("donor");
 
   const [form, setForm] = useState({
-    role: "donor",
     name: "",
     email: "",
     password: "",
@@ -24,45 +24,29 @@ const Register = () => {
   };
 
   const getLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation not supported");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setForm({
-          ...form,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude
-        });
-      },
-      () => alert("Location permission denied")
-    );
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setForm({
+        ...form,
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude
+      });
+    });
   };
 
-  const handleSubmit = async () => {
+  // ✅ THIS WAS MISSING AND BROKEN
+  const handleRegister = async () => {
     try {
-      await axios.post("http://localhost:5000/api/auth/register", {
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        mobile: form.mobile,
-        age: form.age,
-        gender: form.gender.toLowerCase(),
-        blood_group: form.blood_group.toUpperCase(),
-        last_donation_date: form.last_donation_date,
-        latitude: form.latitude,
-        longitude: form.longitude,
+      const finalRole = role === "donor" ? "donor" : "recipient";
 
-        // 🔥 IMPORTANT FIX
-        role: form.role === "donor" ? "donor" : "recipient"
+      await axios.post("http://localhost:5000/api/auth/register", {
+        ...form,
+        role: finalRole
       });
 
       alert("Registration successful");
       navigate("/");
     } catch (err) {
-      console.error(err.response?.data || err.message);
+      console.error(err);
       alert("Registration failed");
     }
   };
@@ -72,52 +56,125 @@ const Register = () => {
       <div style={styles.card}>
         <h2>Register</h2>
 
-        <select name="role" onChange={handleChange} style={styles.input}>
+        {/* Role */}
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          style={styles.input}
+        >
           <option value="donor">Donor</option>
           <option value="hospital">Hospital</option>
-          <option value="bloodbank">Blood Bank</option>
         </select>
 
-        <input name="name" placeholder="Full Name" onChange={handleChange} style={styles.input} />
-        <input name="email" placeholder="Email" onChange={handleChange} style={styles.input} />
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} style={styles.input} />
-        <input name="mobile" placeholder="Mobile Number" onChange={handleChange} style={styles.input} />
-        <input name="age" placeholder="Age" onChange={handleChange} style={styles.input} />
+        {/* Common fields */}
+        <input
+          name="name"
+          placeholder={role === "hospital" ? "Hospital Name" : "Name"}
+          onChange={handleChange}
+          style={styles.input}
+        />
 
-        <select name="gender" onChange={handleChange} style={styles.input}>
-          <option value="">Select Gender</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </select>
+        <input
+          name="email"
+          placeholder="Email"
+          onChange={handleChange}
+          style={styles.input}
+        />
 
-        <select name="blood_group" onChange={handleChange} style={styles.input}>
-          <option value="">Blood Group</option>
-          <option value="A+">A+</option>
-          <option value="A-">A-</option>
-          <option value="B+">B+</option>
-          <option value="B-">B-</option>
-          <option value="AB+">AB+</option>
-          <option value="AB-">AB-</option>
-          <option value="O+">O+</option>
-          <option value="O-">O-</option>
-        </select>
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          onChange={handleChange}
+          style={styles.input}
+        />
 
-        <input type="date" name="last_donation_date" onChange={handleChange} style={styles.input} />
+        <input
+          name="mobile"
+          placeholder="Mobile Number"
+          onChange={handleChange}
+          style={styles.input}
+        />
 
-        <input placeholder="Latitude" value={form.latitude} readOnly style={styles.input} />
-        <input placeholder="Longitude" value={form.longitude} readOnly style={styles.input} />
+        {/* Donor-only fields */}
+        {role === "donor" && (
+          <>
+            <input
+              name="age"
+              placeholder="Age"
+              onChange={handleChange}
+              style={styles.input}
+            />
+
+            <select
+              name="gender"
+              onChange={handleChange}
+              style={styles.input}
+            >
+              <option value="">Select Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+
+            <select
+              name="blood_group"
+              onChange={handleChange}
+              style={styles.input}
+            >
+              <option value="">Blood Group</option>
+              <option>A+</option>
+              <option>A-</option>
+              <option>B+</option>
+              <option>B-</option>
+              <option>AB+</option>
+              <option>AB-</option>
+              <option>O+</option>
+              <option>O-</option>
+            </select>
+
+            <input
+              type="date"
+              name="last_donation_date"
+              onChange={handleChange}
+              style={styles.input}
+            />
+          </>
+        )}
+
+        {/* Location */}
+        <input
+          name="latitude"
+          placeholder="Latitude"
+          value={form.latitude}
+          readOnly
+          style={styles.input}
+        />
+
+        <input
+          name="longitude"
+          placeholder="Longitude"
+          value={form.longitude}
+          readOnly
+          style={styles.input}
+        />
 
         <button onClick={getLocation} style={styles.grayBtn}>
           Get Current Location
         </button>
 
-        <button onClick={handleSubmit} style={styles.redBtn}>
+        <button onClick={handleRegister} style={styles.btn}>
           Sign Up
         </button>
 
-        <p style={styles.link} onClick={() => navigate("/")}>
-          Already have an account? Login
+        <p style={{ marginTop: 10 }}>
+          Already have an account?{" "}
+          <span
+            style={{ color: "red", cursor: "pointer" }}
+            onClick={() => navigate("/")}
+          >
+            Login
+          </span>
         </p>
       </div>
     </div>
@@ -126,46 +183,37 @@ const Register = () => {
 
 const styles = {
   container: {
-    height: "100vh",
+    minHeight: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     background: "#e53935"
   },
   card: {
-    background: "#fff",
-    padding: 25,
     width: 360,
-    borderRadius: 10
+    background: "#fff",
+    padding: 20,
+    borderRadius: 8
   },
   input: {
     width: "100%",
     padding: 10,
-    margin: "6px 0"
+    marginBottom: 8
+  },
+  btn: {
+    width: "100%",
+    padding: 10,
+    background: "#e53935",
+    color: "#fff",
+    border: "none"
   },
   grayBtn: {
     width: "100%",
-    padding: 10,
-    marginTop: 6,
+    padding: 8,
     background: "#555",
     color: "#fff",
     border: "none",
-    cursor: "pointer"
-  },
-  redBtn: {
-    width: "100%",
-    padding: 10,
-    marginTop: 10,
-    background: "#e53935",
-    color: "#fff",
-    border: "none",
-    cursor: "pointer"
-  },
-  link: {
-    marginTop: 12,
-    color: "#e53935",
-    textAlign: "center",
-    cursor: "pointer"
+    marginBottom: 10
   }
 };
 

@@ -24,29 +24,41 @@ const Register = () => {
   };
 
   const getLocation = () => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setForm({
-        ...form,
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude
-      });
-    });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm({
+          ...form,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude
+        });
+      },
+      () => alert("Location permission denied")
+    );
   };
 
-  // ✅ THIS WAS MISSING AND BROKEN
   const handleRegister = async () => {
-    try {
-      const finalRole = role === "donor" ? "donor" : "recipient";
+    // ✅ BASIC VALIDATION
+    if (!form.name || !form.email || !form.password || !form.mobile) {
+      alert("Please fill all required fields");
+      return;
+    }
 
+    if (role === "donor" && (!form.blood_group || !form.gender || !form.age)) {
+      alert("Please fill all donor details");
+      return;
+    }
+
+    try {
+      // ✅ SEND ROLE DIRECTLY (donor / hospital)
       await axios.post("http://localhost:5000/api/auth/register", {
         ...form,
-        role: finalRole
+        role: role
       });
 
       alert("Registration successful");
       navigate("/");
     } catch (err) {
-      console.error(err);
+      console.error("REGISTER ERROR:", err.response?.data || err);
       alert("Registration failed");
     }
   };
@@ -69,7 +81,7 @@ const Register = () => {
         {/* Common fields */}
         <input
           name="name"
-          placeholder={role === "hospital" ? "Hospital Name" : "Name"}
+          placeholder={role === "hospital" ? "Hospital Name" : "Full Name"}
           onChange={handleChange}
           style={styles.input}
         />

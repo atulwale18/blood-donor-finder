@@ -37,36 +37,28 @@ const Register = () => {
   };
 
   const handleRegister = async () => {
-    // ✅ BASIC VALIDATION
-    if (!form.name || !form.email || !form.password || !form.mobile) {
-      alert("Please fill all required fields");
-      return;
-    }
-
-    if (role === "donor" && (!form.blood_group || !form.gender || !form.age)) {
-      alert("Please fill all donor details");
+    if (!form.email || !form.password || !form.mobile) {
+      alert("Please fill required fields");
       return;
     }
 
     try {
-      // ✅ SEND ROLE DIRECTLY (donor / hospital)
       await axios.post("http://localhost:5000/api/auth/register", {
         ...form,
-        role: role
+        role
       });
 
       alert("Registration successful");
       navigate("/");
-    } catch (err) {
-      console.error("REGISTER ERROR:", err.response?.data || err);
+    } catch {
       alert("Registration failed");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>Register</h2>
+    <div style={styles.page}>
+      <div style={styles.card} className="card3d">
+        <h2 style={styles.title}>Create Account ✨</h2>
 
         {/* Role */}
         <select
@@ -108,9 +100,9 @@ const Register = () => {
           style={styles.input}
         />
 
-        {/* Donor-only fields */}
+        {/* Donor-only */}
         {role === "donor" && (
-          <>
+          <div className="fadeSection">
             <input
               name="age"
               placeholder="Age"
@@ -151,12 +143,11 @@ const Register = () => {
               onChange={handleChange}
               style={styles.input}
             />
-          </>
+          </div>
         )}
 
         {/* Location */}
         <input
-          name="latitude"
           placeholder="Latitude"
           value={form.latitude}
           readOnly
@@ -164,69 +155,132 @@ const Register = () => {
         />
 
         <input
-          name="longitude"
           placeholder="Longitude"
           value={form.longitude}
           readOnly
           style={styles.input}
         />
 
-        <button onClick={getLocation} style={styles.grayBtn}>
-          Get Current Location
+        <button onClick={getLocation} style={styles.locationBtn}>
+          📍 Get Current Location
         </button>
 
-        <button onClick={handleRegister} style={styles.btn}>
+        <button onClick={handleRegister} style={styles.registerBtn}>
           Sign Up
         </button>
 
-        <p style={{ marginTop: 10 }}>
+        <p style={styles.footer}>
           Already have an account?{" "}
-          <span
-            style={{ color: "red", cursor: "pointer" }}
-            onClick={() => navigate("/")}
-          >
+          <span style={styles.link} onClick={() => navigate("/")}>
             Login
           </span>
         </p>
       </div>
+
+      {/* Animation CSS */}
+      <style>{animationCSS}</style>
     </div>
   );
 };
 
+/* ================= STYLES ================= */
+
 const styles = {
-  container: {
+  page: {
     minHeight: "100vh",
+    background: "linear-gradient(135deg, #b31217, #e52d27)",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
-    background: "#e53935"
+    alignItems: "center"
   },
   card: {
-    width: 360,
-    background: "#fff",
-    padding: 20,
-    borderRadius: 8
+    width: 380,
+    padding: 30,
+    background: "rgba(255,255,255,0.95)",
+    borderRadius: 20,
+    boxShadow: "0 30px 60px rgba(0,0,0,0.35)",
+    textAlign: "center"
+  },
+  title: {
+    marginBottom: 20
   },
   input: {
     width: "100%",
-    padding: 10,
-    marginBottom: 8
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    outline: "none",
+    transition: "0.3s"
   },
-  btn: {
+  locationBtn: {
     width: "100%",
     padding: 10,
-    background: "#e53935",
-    color: "#fff",
-    border: "none"
-  },
-  grayBtn: {
-    width: "100%",
-    padding: 8,
     background: "#555",
     color: "#fff",
     border: "none",
-    marginBottom: 10
+    borderRadius: 10,
+    cursor: "pointer",
+    marginBottom: 12
+  },
+  registerBtn: {
+    width: "100%",
+    padding: 12,
+    background: "linear-gradient(135deg, #e53935, #b71c1c)",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontSize: 15
+  },
+  footer: {
+    marginTop: 18,
+    fontSize: 14
+  },
+  link: {
+    color: "#e53935",
+    cursor: "pointer",
+    fontWeight: "bold"
   }
 };
+
+/* ================= ANIMATION ================= */
+
+const animationCSS = `
+.card3d {
+  animation: fadeIn 0.8s ease-in-out;
+  transform-style: preserve-3d;
+}
+.card3d:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+input:focus, select:focus {
+  border-color: #e53935;
+  box-shadow: 0 0 8px rgba(229,57,53,0.4);
+}
+.fadeSection {
+  animation: slideDown 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+`;
 
 export default Register;

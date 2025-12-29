@@ -9,33 +9,39 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
+
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email: email,
-        password: password
+        email: email.trim(),
+        password: password.trim()
       });
 
-      // ✅ SAVE LOGGED-IN USER INFO
-      localStorage.setItem("user_id", res.data.user.user_id);
-      localStorage.setItem("role", res.data.user.role);
+      localStorage.setItem("user_id", res.data.user_id);
+      localStorage.setItem("role", res.data.role);
 
-      const role = res.data.user.role;
-
-      if (role === "donor") navigate("/donor");
-      else navigate("/hospital");
-
-    } catch (err) {
+      if (res.data.role === "hospital") {
+        navigate("/hospital-dashboard");
+      } else {
+        navigate("/donor-dashboard");
+      }
+    } catch {
       alert("Invalid credentials");
     }
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <h2>Login</h2>
+    <div style={styles.page}>
+      <div style={styles.card} className="card3d">
+        <h2 style={styles.title}>Welcome Back 👋</h2>
+        <p style={styles.subtitle}>Login to continue</p>
 
         <input
-          placeholder="Email"
+          type="email"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={styles.input}
@@ -49,60 +55,118 @@ const Login = () => {
           style={styles.input}
         />
 
-        <button onClick={handleLogin} style={styles.btn}>
+        <button style={styles.btn} onClick={handleLogin}>
           Login
         </button>
 
-        {/* ✅ SIGN UP OPTION */}
-        <p
-          style={styles.signupText}
-          onClick={() => navigate("/register")}
-        >
-          Don’t have an account? <span style={styles.signupLink}>Sign up</span>
+        <p style={styles.footerText}>
+          Don’t have an account?{" "}
+          <span style={styles.link} onClick={() => navigate("/register")}>
+            Register
+          </span>
         </p>
-
       </div>
+
+      {/* Animation CSS */}
+      <style>{animationCSS}</style>
     </div>
   );
 };
 
+/* ================= STYLES ================= */
+
 const styles = {
-  container: {
-    height: "100vh",
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #b31217, #e52d27)",
     display: "flex",
     justifyContent: "center",
-    alignItems: "center",
-    background: "#e53935"
+    alignItems: "center"
   },
   card: {
-    width: 320,
-    padding: 20,
-    background: "#fff",
-    borderRadius: 8
+    width: 380,
+    padding: "35px 30px",
+    background: "rgba(255,255,255,0.95)",
+    borderRadius: 18,
+    boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
+    textAlign: "center"
+  },
+  title: {
+    marginBottom: 5,
+    fontSize: 26
+  },
+  subtitle: {
+    color: "#777",
+    marginBottom: 25
   },
   input: {
     width: "100%",
-    padding: 10,
-    margin: "6px 0"
+    padding: 12,
+    marginBottom: 15,
+    borderRadius: 10,
+    border: "1px solid #ddd",
+    fontSize: 14,
+    outline: "none",
+    transition: "0.3s"
   },
   btn: {
     width: "100%",
-    padding: 10,
-    marginTop: 10,
-    background: "#e53935",
+    padding: 12,
+    background: "linear-gradient(135deg, #e53935, #b71c1c)",
     color: "#fff",
     border: "none",
-    cursor: "pointer"
+    borderRadius: 10,
+    fontSize: 15,
+    cursor: "pointer",
+    transition: "0.3s"
   },
-  signupText: {
-    marginTop: 12,
-    textAlign: "center",
-    cursor: "pointer"
+  footerText: {
+    marginTop: 18,
+    fontSize: 14
   },
-  signupLink: {
+  link: {
     color: "#e53935",
+    cursor: "pointer",
     fontWeight: "bold"
   }
 };
+
+/* ================= 3D & ANIMATION ================= */
+
+const animationCSS = `
+.card3d {
+  animation: fadeIn 0.8s ease-in-out;
+  transform-style: preserve-3d;
+}
+
+.card3d:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+input:focus {
+  border-color: #e53935;
+  box-shadow: 0 0 8px rgba(229,57,53,0.4);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(229,57,53,0.5);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+`;
 
 export default Login;

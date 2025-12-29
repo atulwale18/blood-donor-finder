@@ -20,7 +20,6 @@ exports.register = (req, res) => {
 
   email = email.toLowerCase().trim();
 
-  // 1️⃣ Insert into users table
   const userSql = `
     INSERT INTO users (email, password, role)
     VALUES (?, ?, ?)
@@ -28,13 +27,13 @@ exports.register = (req, res) => {
 
   db.query(userSql, [email, password, role], (err, userResult) => {
     if (err) {
-      console.error("USER INSERT ERROR:", err);
+      console.error(err);
       return res.status(500).json({ message: "Registration failed" });
     }
 
     const user_id = userResult.insertId;
 
-    // 2️⃣ Role-specific insert
+    // DONOR
     if (role === "donor") {
       const donorSql = `
         INSERT INTO donors
@@ -56,16 +55,13 @@ exports.register = (req, res) => {
           longitude
         ],
         (err) => {
-          if (err) {
-            console.error("DONOR INSERT ERROR:", err);
-            return res.status(500).json({ message: "Registration failed" });
-          }
-
+          if (err) return res.status(500).json({ message: "Registration failed" });
           res.json({ message: "Donor registered successfully" });
         }
       );
     }
 
+    // HOSPITAL
     else if (role === "hospital") {
       const hospitalSql = `
         INSERT INTO hospitals
@@ -77,33 +73,8 @@ exports.register = (req, res) => {
         hospitalSql,
         [user_id, name, mobile, latitude, longitude],
         (err) => {
-          if (err) {
-            console.error("HOSPITAL INSERT ERROR:", err);
-            return res.status(500).json({ message: "Registration failed" });
-          }
-
+          if (err) return res.status(500).json({ message: "Registration failed" });
           res.json({ message: "Hospital registered successfully" });
-        }
-      );
-    }
-
-    else if (role === "bloodbank") {
-      const bankSql = `
-        INSERT INTO blood_banks
-        (name, mobile, latitude, longitude)
-        VALUES (?, ?, ?, ?)
-      `;
-
-      db.query(
-        bankSql,
-        [name, mobile, latitude, longitude],
-        (err) => {
-          if (err) {
-            console.error("BLOOD BANK INSERT ERROR:", err);
-            return res.status(500).json({ message: "Registration failed" });
-          }
-
-          res.json({ message: "Blood bank added successfully" });
         }
       );
     }
@@ -111,11 +82,13 @@ exports.register = (req, res) => {
 };
 
 /* =====================
-   LOGIN
+   LOGIN (STABLE)
 ===================== */
 exports.login = (req, res) => {
   let { email, password } = req.body;
+
   email = email.toLowerCase().trim();
+  password = password.trim();
 
   const sql = `
     SELECT user_id, role
@@ -124,18 +97,16 @@ exports.login = (req, res) => {
   `;
 
   db.query(sql, [email, password], (err, result) => {
-    if (err) {
-      console.error("LOGIN ERROR:", err);
-      return res.status(500).json({ message: "Server error" });
-    }
+    if (err) return res.status(500).json({ message: "Server error" });
 
     if (result.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     res.json({
-      message: "Login successful",
-      user: result[0]
+      message: "Login success",
+      user_id: result[0].user_id,
+      role: result[0].role
     });
   });
 };

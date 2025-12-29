@@ -4,10 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 const DonorDashboard = () => {
   const navigate = useNavigate();
-  const [donor, setDonor] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   const userId = localStorage.getItem("user_id");
+
+  const [donor, setDonor] = useState(null);
+  const [available, setAvailable] = useState(true);
 
   useEffect(() => {
     if (!userId) {
@@ -16,58 +16,81 @@ const DonorDashboard = () => {
     }
 
     axios
-      .get(`http://localhost:5000/api/donor/${userId}`)
-      .then((res) => {
-        setDonor(res.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .get(`http://localhost:5000/api/profile/donor/${userId}`)
+      .then((res) => setDonor(res.data))
+      .catch(() => alert("Failed to load donor data"));
   }, [userId, navigate]);
 
-  if (loading) {
-    return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
-  }
-
   if (!donor) {
-    return <h2 style={{ textAlign: "center" }}>No data found</h2>;
+    return <div style={styles.loading}>Loading...</div>;
   }
 
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
-        <h2 style={styles.heading}>🩸 Donor Dashboard</h2>
+      <div style={styles.card} className="fadeIn">
+        {/* Header */}
+        <h2 style={styles.title}>🩸 Donor Dashboard</h2>
 
-        <div style={styles.profileRow}>
+        {/* Profile */}
+        <div style={styles.profile}>
           <div style={styles.avatar}>
             {donor.name.charAt(0).toUpperCase()}
           </div>
           <div>
             <h3>{donor.name}</h3>
-            <p style={{ color: "#555" }}>{donor.email}</p>
+            <p style={{ color: "#666" }}>{donor.email || "Registered Donor"}</p>
           </div>
         </div>
 
-        <div style={styles.infoGrid}>
-          <Info label="Blood Group" value={donor.blood_group} />
-          <Info label="Mobile" value={donor.mobile} />
-          <Info label="Gender" value={donor.gender} />
-          <Info
-            label="Last Donation"
-            value={
-              donor.last_donation_date
-                ? donor.last_donation_date.split("T")[0]
-                : "Not yet"
-            }
-          />
+        {/* Info Grid */}
+        <div style={styles.grid}>
+          <div style={styles.box}>
+            <p className="label">Blood Group</p>
+            <h4>{donor.blood_group}</h4>
+          </div>
+
+          <div style={styles.box}>
+            <p className="label">Mobile</p>
+            <h4>{donor.mobile}</h4>
+          </div>
+
+          <div style={styles.box}>
+            <p className="label">Gender</p>
+            <h4>{donor.gender}</h4>
+          </div>
+
+          <div style={styles.box}>
+            <p className="label">Last Donation</p>
+            <h4>{donor.last_donation_date || "Not yet"}</h4>
+          </div>
         </div>
 
-        <div style={styles.actions}>
-          <button style={styles.acceptBtn}>✔ Available to Donate</button>
-          <button style={styles.rejectBtn}>✖ Not Available</button>
+        {/* Availability Buttons */}
+        <div style={styles.btnRow}>
+          <button
+            style={{
+              ...styles.availBtn,
+              background: available ? "#2e7d32" : "#ccc"
+            }}
+            onClick={() => setAvailable(true)}
+          >
+            ✔ Available to Donate
+          </button>
+
+          <button
+            style={{
+              ...styles.notAvailBtn,
+              background: !available ? "#000" : "#ccc"
+            }}
+            onClick={() => setAvailable(false)}
+          >
+            ✖ Not Available
+          </button>
         </div>
 
+        {/* Logout */}
         <button
-          style={styles.logoutBtn}
+          style={styles.logout}
           onClick={() => {
             localStorage.clear();
             navigate("/");
@@ -76,106 +99,122 @@ const DonorDashboard = () => {
           Logout
         </button>
       </div>
+
+      {/* Animation CSS */}
+      <style>{animationCSS}</style>
     </div>
   );
 };
 
-const Info = ({ label, value }) => (
-  <div style={styles.infoBox}>
-    <p style={styles.infoLabel}>{label}</p>
-    <p style={styles.infoValue}>{value}</p>
-  </div>
-);
+/* ================= STYLES ================= */
 
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #e53935, #b71c1c)",
+    background: "linear-gradient(135deg, #b71c1c, #e53935)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center"
   },
   card: {
-    width: 420,
+    width: 380,
     background: "#fff",
     padding: 25,
-    borderRadius: 12,
-    boxShadow: "0 10px 25px rgba(0,0,0,0.3)"
+    borderRadius: 16,
+    boxShadow: "0 15px 40px rgba(0,0,0,0.25)"
   },
-  heading: {
+  title: {
     textAlign: "center",
     marginBottom: 20
   },
-  profileRow: {
+  profile: {
     display: "flex",
-    alignItems: "center",
     gap: 15,
+    alignItems: "center",
     marginBottom: 20
   },
   avatar: {
     width: 60,
     height: 60,
     borderRadius: "50%",
-    background: "#e53935",
+    background: "#c62828",
     color: "#fff",
-    fontSize: 28,
-    fontWeight: "bold",
+    fontSize: 26,
     display: "flex",
     justifyContent: "center",
     alignItems: "center"
   },
-  infoGrid: {
+  grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 12,
     marginBottom: 20
   },
-  infoBox: {
+  box: {
     background: "#f5f5f5",
-    padding: 10,
-    borderRadius: 8
+    padding: 12,
+    borderRadius: 10
   },
-  infoLabel: {
-    fontSize: 12,
-    color: "#777"
-  },
-  infoValue: {
-    fontWeight: "bold"
-  },
-  actions: {
+  btnRow: {
     display: "flex",
-    justifyContent: "space-between",
+    gap: 10,
     marginBottom: 15
   },
-  acceptBtn: {
+  availBtn: {
     flex: 1,
-    marginRight: 5,
     padding: 10,
-    background: "#2e7d32",
-    color: "#fff",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 8,
+    color: "#fff",
     cursor: "pointer"
   },
-  rejectBtn: {
+  notAvailBtn: {
     flex: 1,
-    marginLeft: 5,
     padding: 10,
-    background: "#616161",
-    color: "#fff",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 8,
+    color: "#fff",
     cursor: "pointer"
   },
-  logoutBtn: {
+  logout: {
     width: "100%",
     padding: 10,
-    background: "#e53935",
+    background: "#d32f2f",
     color: "#fff",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 8,
     cursor: "pointer"
+  },
+  loading: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontSize: 20,
+    color: "#fff"
   }
 };
+
+/* ================= ANIMATION ================= */
+
+const animationCSS = `
+.fadeIn {
+  animation: fadeIn 0.7s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.label {
+  font-size: 12px;
+  color: #777;
+}
+`;
 
 export default DonorDashboard;

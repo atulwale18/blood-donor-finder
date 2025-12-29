@@ -10,10 +10,16 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/donor" element={<DonorDashboard />} />
-        <Route path="/hospital" element={<HospitalDashboard />} />
+
+        {/* Dashboards */}
+        <Route path="/donor-dashboard" element={<DonorDashboard />} />
+        <Route path="/hospital-dashboard" element={<HospitalDashboard />} />
+
+        {/* Optional: fallback */}
+        <Route path="*" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );

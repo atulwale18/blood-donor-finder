@@ -23,11 +23,14 @@ const Login = () => {
       localStorage.setItem("user_id", res.data.user_id);
       localStorage.setItem("role", res.data.role);
 
-      if (res.data.role === "hospital") {
-        navigate("/hospital-dashboard");
+      if (res.data.role === "admin") {
+         navigate("/admin-dashboard");
+      } else if (res.data.role === "hospital") {
+                navigate("/hospital-dashboard");
       } else {
-        navigate("/donor-dashboard");
+              navigate("/donor-dashboard");
       }
+
     } catch {
       alert("Invalid credentials");
     }

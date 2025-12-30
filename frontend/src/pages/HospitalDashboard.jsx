@@ -2,6 +2,27 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+/* ================= STATIC BLOOD BANK DATA (UI ONLY) ================= */
+
+const nearbyBloodBanks = [
+  {
+    name: "Civil Blood Bank – Sangli",
+    contact: "0233-2323456",
+    blood: {
+      "A+": 12, "A-": 4, "B+": 8, "B-": 3,
+      "AB+": 6, "AB-": 2, "O+": 15, "O-": 5
+    }
+  },
+  {
+    name: "Red Cross Blood Bank – Sangli",
+    contact: "0233-2345678",
+    blood: {
+      "A+": 10, "A-": 3, "B+": 6, "B-": 2,
+      "AB+": 4, "AB-": 1, "O+": 12, "O-": 4
+    }
+  }
+];
+
 const HospitalDashboard = () => {
   const navigate = useNavigate();
   const userId = localStorage.getItem("user_id");
@@ -47,6 +68,34 @@ const HospitalDashboard = () => {
             <h3>{hospital.hospital_name}</h3>
             <p style={styles.email}>{hospital.email || "Hospital Account"}</p>
             <p style={styles.mobile}>📞 {hospital.mobile}</p>
+          </div>
+        </div>
+
+        {/* ================= Nearby Blood Banks ================= */}
+        <div style={styles.section}>
+          <h4>🏦 Nearby Blood Banks</h4>
+
+          <div style={styles.bankGrid}>
+            {nearbyBloodBanks.map((bank, index) => (
+              <div key={index} style={styles.bankCard} className="bankHover">
+                <h5>{bank.name}</h5>
+
+                <div style={styles.bloodGrid}>
+                  {Object.entries(bank.blood).map(([group, units]) => (
+                    <span key={group} style={styles.bloodTag}>
+                      {group}: {units}
+                    </span>
+                  ))}
+                </div>
+
+                <button
+                  style={styles.contactBtn}
+                  onClick={() => alert(`Call ${bank.contact}`)}
+                >
+                  📞 Contact Blood Bank
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -183,6 +232,41 @@ const styles = {
     alignItems: "center",
     fontSize: 20,
     color: "#fff"
+  },
+
+  /* ===== Blood Bank Styles ===== */
+  bankGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: 15
+  },
+  bankCard: {
+    background: "#f5f5f5",
+    padding: 15,
+    borderRadius: 12,
+    boxShadow: "0 8px 20px rgba(0,0,0,0.15)"
+  },
+  bloodGrid: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 6,
+    margin: "10px 0"
+  },
+  bloodTag: {
+    background: "#e53935",
+    color: "#fff",
+    padding: "4px 8px",
+    borderRadius: 6,
+    fontSize: 12
+  },
+  contactBtn: {
+    marginTop: 10,
+    padding: "8px 12px",
+    background: "#1565c0",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer"
   }
 };
 
@@ -191,6 +275,13 @@ const styles = {
 const animationCSS = `
 .fadeIn {
   animation: fadeIn 0.7s ease-in-out;
+}
+.bankHover {
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.bankHover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
 }
 @keyframes fadeIn {
   from {

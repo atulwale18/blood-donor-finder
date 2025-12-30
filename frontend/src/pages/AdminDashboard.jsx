@@ -47,16 +47,70 @@ const AdminDashboard = () => {
     "AB+": 40, "AB-": 18, "O+": 160, "O-": 50
   };
 
+  /* ===== NEW: Hospital Activity (Monitoring) ===== */
+
+  const hospitalActivities = [
+    {
+      hospital: "City Hospital",
+      action: "Checked nearby blood banks for AB+",
+      time: "10 mins ago",
+      type: "info"
+    },
+    {
+      hospital: "Civil Hospital",
+      action: "Emergency blood request raised for O-",
+      time: "25 mins ago",
+      type: "alert"
+    },
+    {
+      hospital: "City Hospital",
+      action: "Donor accepted request for B+",
+      time: "1 hour ago",
+      type: "success"
+    }
+  ];
+
   /* ================= RENDER CONTENT ================= */
 
   const renderSection = () => {
     switch (active) {
+
+      case "overview":
+        return (
+          <div className="fadeIn">
+            <h2 style={styles.title}>👑 Admin Dashboard</h2>
+            <p style={{ color: "#fff", marginBottom: 20 }}>
+              Central control panel for blood management system.
+            </p>
+
+            {/* ===== Hospital Activity ===== */}
+            <div style={styles.activityCard}>
+              <h3>📌 Hospital Activity</h3>
+
+              {hospitalActivities.map((item, index) => (
+                <div key={index} style={styles.activityItem}>
+                  <p style={styles.activityHospital}>🏥 {item.hospital}</p>
+                  <p style={styles.activityText}>
+                    {item.type === "alert" && "🚨 "}
+                    {item.type === "success" && "✔ "}
+                    {item.type === "info" && "🩸 "}
+                    {item.action}
+                  </p>
+                  <span style={styles.activityTime}>⏰ {item.time}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
       case "donors":
-        return <Table title="🧍 Donors" headers={["Name","Blood","City","Mobile"]}
+        return <Table title="🧍 Donors"
+          headers={["Name","Blood","City","Mobile"]}
           rows={donors.map(d=>[d.name,d.blood,d.city,d.mobile])} />;
 
       case "hospitals":
-        return <Table title="🏥 Hospitals" headers={["Hospital","City","Mobile"]}
+        return <Table title="🏥 Hospitals"
+          headers={["Hospital","City","Mobile"]}
           rows={hospitals.map(h=>[h.name,h.city,h.mobile])} />;
 
       case "bloodbanks":
@@ -142,12 +196,7 @@ const AdminDashboard = () => {
         );
 
       default:
-        return (
-          <div className="fadeIn">
-            <h2>👑 Admin Dashboard</h2>
-            <p>Central control panel for blood management system.</p>
-          </div>
-        );
+        return null;
     }
   };
 
@@ -231,7 +280,29 @@ const styles = {
   formCard:{width:320,background:"#fff",padding:20,borderRadius:16},
   input:{width:"100%",padding:10,marginBottom:10},
   primaryBtn:{width:"100%",padding:10,background:"#1565c0",
-    color:"#fff",border:"none",borderRadius:8}
+    color:"#fff",border:"none",borderRadius:8},
+
+  /* ===== Activity Styles ===== */
+  activityCard:{
+    background:"#fff",
+    padding:20,
+    borderRadius:16,
+    boxShadow:"0 10px 25px rgba(0,0,0,0.15)"
+  },
+  activityItem:{
+    borderBottom:"1px solid #eee",
+    padding:"10px 0"
+  },
+  activityHospital:{
+    fontWeight:"bold"
+  },
+  activityText:{
+    fontSize:14
+  },
+  activityTime:{
+    fontSize:12,
+    color:"#777"
+  }
 };
 
 /* ================= ANIMATION ================= */

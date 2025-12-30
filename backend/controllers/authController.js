@@ -33,7 +33,7 @@ exports.register = (req, res) => {
 
     const user_id = userResult.insertId;
 
-    // DONOR
+    // ===== DONOR REGISTER =====
     if (role === "donor") {
       const donorSql = `
         INSERT INTO donors
@@ -55,13 +55,17 @@ exports.register = (req, res) => {
           longitude
         ],
         (err) => {
-          if (err) return res.status(500).json({ message: "Registration failed" });
-          res.json({ message: "Donor registered successfully" });
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Registration failed" });
+          }
+
+          return res.json({ message: "Donor registered successfully" });
         }
       );
     }
 
-    // HOSPITAL
+    // ===== HOSPITAL REGISTER =====
     else if (role === "hospital") {
       const hospitalSql = `
         INSERT INTO hospitals
@@ -73,8 +77,12 @@ exports.register = (req, res) => {
         hospitalSql,
         [user_id, name, mobile, latitude, longitude],
         (err) => {
-          if (err) return res.status(500).json({ message: "Registration failed" });
-          res.json({ message: "Hospital registered successfully" });
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "Registration failed" });
+          }
+
+          return res.json({ message: "Hospital registered successfully" });
         }
       );
     }
@@ -82,7 +90,7 @@ exports.register = (req, res) => {
 };
 
 /* =====================
-   LOGIN (STABLE)
+   LOGIN (FIXED)
 ===================== */
 exports.login = (req, res) => {
   let { email, password } = req.body;
@@ -90,23 +98,67 @@ exports.login = (req, res) => {
   email = email.toLowerCase().trim();
   password = password.trim();
 
-  const sql = `
+  const userSql = `
     SELECT user_id, role
     FROM users
     WHERE email = ? AND password = ?
   `;
 
-  db.query(sql, [email, password], (err, result) => {
-    if (err) return res.status(500).json({ message: "Server error" });
+  db.query(userSql, [email, password], (err, users) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Server error" });
+    }
 
-    if (result.length === 0) {
+    if (users.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    res.json({
-      message: "Login success",
-      user_id: result[0].user_id,
-      role: result[0].role
-    });
+    const user = users[0];
+
+    // ===== DONOR LOGIN =====
+    if (user.role === "donor") {
+      const donorSql = `SELECT donor_id FROM donors WHERE user_id = ?`;
+
+      return db.query(donorSql, [user.user_id], (err, donors) => {
+        if (err || donors.length === 0) {
+          return res.status(404).json({ message: "Donor not found" });
+        }
+
+        return res.json({
+          message: "Login success",
+          role: "donor",
+          user_id: user.user_id,
+          donor_id: donors[0].donor_id
+        });
+      });
+    }
+
+    // ===== HOSPITAL LOGIN =====
+    if (user.role === "hospital") {
+      const hospitalSql = `SELECT hospital_id FROM hospitals WHERE user_id = ?`;
+
+      return db.query(hospitalSql, [user.user_id], (err, hospitals) => {
+        if (err || hospitals.length === 0) {
+          return res.status(404).json({ message: "Hospital not found" });
+        }
+
+        return res.json({
+          message: "Login success",
+          role: "hospital",
+          user_id: user.user_id,
+          hospital_id: hospitals[0].hospital_id
+        });
+      });
+    }
+
+    // ===== ADMIN LOGIN =====
+    if (user.role === "admin") {
+      return res.json({
+        message: "Login success",
+        role: "admin",
+        user_id: user.user_id
+      });
+    }
   });
 };

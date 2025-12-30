@@ -23,6 +23,7 @@ app.use("/api/hospital", hospitalRoutes);
 app.use("/api", require("./routes/hospitalRoutes"));
 app.use("/api", require("./routes/emergencyRoutes"));
 app.use("/api/profile", require("./routes/profileRoutes"));
+app.use("/api/bloodbank", bloodBankRoutes);
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");

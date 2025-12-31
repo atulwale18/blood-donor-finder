@@ -15,6 +15,8 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 const donorRoutes = require("./routes/donorRoutes");
 const hospitalRoutes = require("./routes/hospitalRoutes");
+const bloodBankRoutes = require("./routes/bloodBankRoutes");
+
 
 
 app.use("/api/auth", authRoutes);

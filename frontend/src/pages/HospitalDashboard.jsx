@@ -9,6 +9,9 @@ const HospitalDashboard = () => {
   const [hospital, setHospital] = useState(null);
   const [bloodBanks, setBloodBanks] = useState([]);
 
+  // ✅ ADDED (required)
+  const [bloodGroup, setBloodGroup] = useState("O+");
+
   useEffect(() => {
     if (!userId) {
       navigate("/");
@@ -35,6 +38,35 @@ const HospitalDashboard = () => {
 
   const sendEmergency = () => {
     alert("Emergency request sent to nearby donors 🚨");
+  };
+
+  // ✅ UPDATED (real emergency check)
+  const emergencyBloodCheck = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/bloodbank/emergency",
+        {
+          params: {
+            blood_group: encodeURIComponent(bloodGroup), // ✅ HERE
+            latitude: hospital.latitude,
+            longitude: hospital.longitude
+          }
+        }
+      );
+
+      if (res.data.length === 0) {
+        alert("Required blood group is not available. Please contact nearby blood banks.");
+        return;
+      }
+
+      const bank = res.data[0];
+
+      alert(
+        `Blood Available!\n\nBlood Bank: ${bank.name}\nBlood Group: ${bank.blood_group}\nUnits: ${bank.units_available}\nPhone: ${bank.mobile}`
+      );
+    } catch (err) {
+      alert("Failed to check emergency blood availability");
+    }
   };
 
   if (!hospital) {
@@ -71,6 +103,31 @@ const HospitalDashboard = () => {
           </button>
         </div>
 
+        {/* ✅ Blood group selector (minimal, no style changes) */}
+        <div style={styles.section}>
+          <select
+            value={bloodGroup}
+            onChange={(e) => setBloodGroup(e.target.value)}
+            style={{ width: "100%", padding: 10, marginBottom: 10 }}
+          >
+            <option>O+</option>
+            <option>O-</option>
+            <option>A+</option>
+            <option>A-</option>
+            <option>B+</option>
+            <option>B-</option>
+            <option>AB+</option>
+            <option>AB-</option>
+          </select>
+
+          <button
+            style={styles.emergencyBtn}
+            onClick={emergencyBloodCheck}
+          >
+            Emergency Blood Check
+          </button>
+        </div>
+
         {/* ================= NEARBY BLOOD BANKS ================= */}
         <div style={styles.section}>
           <h4>🏦 Nearby Blood Banks</h4>
@@ -86,9 +143,9 @@ const HospitalDashboard = () => {
 
                 <button
                   style={styles.emergencyBtn}
-                  onClick={() => alert(`Call ${bank.mobile}`)}
+                  onClick={() => window.location.href = `tel:${bank.mobile}`}
                 >
-                  Contact Blood Bank
+                  Call Blood Bank
                 </button>
               </div>
             ))
@@ -193,8 +250,6 @@ const styles = {
     color: "#fff"
   }
 };
-
-/* ================= ANIMATION ================= */
 
 const animationCSS = `
 .fadeIn {

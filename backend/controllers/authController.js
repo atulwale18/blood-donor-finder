@@ -41,7 +41,7 @@ exports.register = (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
-      db.query(
+      return db.query(
         donorSql,
         [
           user_id,
@@ -66,14 +66,14 @@ exports.register = (req, res) => {
     }
 
     // ===== HOSPITAL REGISTER =====
-    else if (role === "hospital") {
+    if (role === "hospital") {
       const hospitalSql = `
         INSERT INTO hospitals
         (user_id, hospital_name, mobile, latitude, longitude)
         VALUES (?, ?, ?, ?, ?)
       `;
 
-      db.query(
+      return db.query(
         hospitalSql,
         [user_id, name, mobile, latitude, longitude],
         (err) => {
@@ -86,11 +86,14 @@ exports.register = (req, res) => {
         }
       );
     }
+
+    // ===== ADMIN REGISTER (optional) =====
+    return res.json({ message: "User registered successfully" });
   });
 };
 
 /* =====================
-   LOGIN (FIXED)
+   LOGIN (FINAL & CORRECT)
 ===================== */
 exports.login = (req, res) => {
   let { email, password } = req.body;

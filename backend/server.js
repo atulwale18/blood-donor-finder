@@ -16,6 +16,8 @@ const authRoutes = require("./routes/authRoutes");
 const donorRoutes = require("./routes/donorRoutes");
 const hospitalRoutes = require("./routes/hospitalRoutes");
 const bloodBankRoutes = require("./routes/bloodBankRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+
 
 
 
@@ -26,9 +28,10 @@ app.use("/api", require("./routes/hospitalRoutes"));
 app.use("/api", require("./routes/emergencyRoutes"));
 app.use("/api/profile", require("./routes/profileRoutes"));
 app.use("/api/bloodbank", bloodBankRoutes);
+app.use("/api/admin", adminRoutes);
+
 
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
-
 

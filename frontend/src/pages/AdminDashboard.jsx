@@ -1,74 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [active, setActive] = useState("overview");
   const [selectedBank, setSelectedBank] = useState(null);
 
-  /* ================= STATIC UI DATA ================= */
+  /* ================= REAL DATA STATES ================= */
 
-  const donors = [
-    { name: "Atul Wale", blood: "A+", city: "Sangli", mobile: "7820946531" },
-    { name: "Rohit Patil", blood: "O+", city: "Miraj", mobile: "9876543210" },
-    { name: "Amit Jadhav", blood: "B+", city: "Sangli", mobile: "9123456789" }
-  ];
+  const [donors, setDonors] = useState([]);
+  const [hospitals, setHospitals] = useState([]);
+  const [bloodBanks, setBloodBanks] = useState([]);
+  const [inventory, setInventory] = useState([]);
+  const [requests, setRequests] = useState([]);
+  const [reports, setReports] = useState([]);
 
-  const hospitals = [
-    { name: "Civil Hospital", city: "Sangli", mobile: "0233-2321111" },
-    { name: "City Hospital", city: "Miraj", mobile: "0233-2212345" }
-  ];
+  /* ===== Create Request ===== */
+  const [reqHospital, setReqHospital] = useState("");
+  const [reqBlood, setReqBlood] = useState("");
 
-  const bloodBanks = [
-    {
-      name: "Civil Blood Bank – Sangli",
-      location: "Civil Hospital Campus, Sangli",
-      contact: "0233-2323456",
-      type: "Government",
-      blood: {
-        "A+": 12, "A-": 4, "B+": 8, "B-": 3,
-        "AB+": 6, "AB-": 2, "O+": 15, "O-": 5
-      }
-    },
-    {
-      name: "Red Cross Blood Bank – Sangli",
-      location: "Market Yard Road, Sangli",
-      contact: "0233-2345678",
-      type: "Private",
-      blood: {
-        "A+": 10, "A-": 3, "B+": 6, "B-": 2,
-        "AB+": 4, "AB-": 1, "O+": 12, "O-": 4
-      }
+  /* ================= LOAD REAL DATA ================= */
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/admin/donors").then(res => setDonors(res.data));
+    axios.get("http://localhost:5000/api/admin/hospitals").then(res => setHospitals(res.data));
+    axios.get("http://localhost:5000/api/admin/bloodbanks").then(res => setBloodBanks(res.data));
+    axios.get("http://localhost:5000/api/admin/inventory").then(res => setInventory(res.data));
+    axios.get("http://localhost:5000/api/admin/requests").then(res => setRequests(res.data));
+    axios.get("http://localhost:5000/api/admin/reports").then(res => setReports(res.data));
+  }, []);
+
+  /* ================= CREATE REQUEST ================= */
+
+  const createRequest = () => {
+    if (!reqHospital || !reqBlood) {
+      alert("Please select hospital and blood group");
+      return;
     }
-  ];
 
-  const totalBloodUnits = {
-    "A+": 120, "A-": 30, "B+": 95, "B-": 25,
-    "AB+": 40, "AB-": 18, "O+": 160, "O-": 50
+    axios.post("http://localhost:5000/api/admin/requests", {
+      hospital_id: reqHospital,
+      blood_group: reqBlood
+    }).then(() => {
+      alert("Emergency request created");
+      setReqHospital("");
+      setReqBlood("");
+    });
   };
-
-  /* ===== NEW: Hospital Activity (Monitoring) ===== */
-
-  const hospitalActivities = [
-    {
-      hospital: "City Hospital",
-      action: "Checked nearby blood banks for AB+",
-      time: "10 mins ago",
-      type: "info"
-    },
-    {
-      hospital: "Civil Hospital",
-      action: "Emergency blood request raised for O-",
-      time: "25 mins ago",
-      type: "alert"
-    },
-    {
-      hospital: "City Hospital",
-      action: "Donor accepted request for B+",
-      time: "1 hour ago",
-      type: "success"
-    }
-  ];
 
   /* ================= RENDER CONTENT ================= */
 
@@ -82,44 +61,27 @@ const AdminDashboard = () => {
             <p style={{ color: "#fff", marginBottom: 20 }}>
               Central control panel for blood management system.
             </p>
-
-            {/* ===== Hospital Activity ===== */}
-            <div style={styles.activityCard}>
-              <h3>📌 Hospital Activity</h3>
-
-              {hospitalActivities.map((item, index) => (
-                <div key={index} style={styles.activityItem}>
-                  <p style={styles.activityHospital}>🏥 {item.hospital}</p>
-                  <p style={styles.activityText}>
-                    {item.type === "alert" && "🚨 "}
-                    {item.type === "success" && "✔ "}
-                    {item.type === "info" && "🩸 "}
-                    {item.action}
-                  </p>
-                  <span style={styles.activityTime}>⏰ {item.time}</span>
-                </div>
-              ))}
-            </div>
           </div>
         );
 
       case "donors":
         return <Table title="🧍 Donors"
-          headers={["Name","Blood","City","Mobile"]}
-          rows={donors.map(d=>[d.name,d.blood,d.city,d.mobile])} />;
+          headers={["Name","Blood","Mobile"]}
+          rows={donors.map(d=>[d.name,d.blood_group,d.mobile])} />;
 
       case "hospitals":
         return <Table title="🏥 Hospitals"
-          headers={["Hospital","City","Mobile"]}
-          rows={hospitals.map(h=>[h.name,h.city,h.mobile])} />;
+          headers={["Hospital","Mobile"]}
+          rows={hospitals.map(h=>[h.hospital_name,h.mobile])} />;
 
       case "bloodbanks":
         return (
           <>
-            <h2 style={styles.title}>🏦 Blood Banks (Sangli)</h2>
+            <h2 style={styles.title}>🏦 Blood Banks</h2>
             <div style={styles.grid}>
-              {bloodBanks.map((b,i)=>(
-                <div key={i} style={styles.glassCard}
+              {bloodBanks.map((b)=>(
+                <div key={b.bloodbank_id}
+                  style={styles.glassCard}
                   className="card3d"
                   onClick={()=>setSelectedBank(b)}>
                   {b.name}
@@ -130,14 +92,17 @@ const AdminDashboard = () => {
             {selectedBank && (
               <div style={styles.detailCard} className="fadeIn">
                 <h3>{selectedBank.name}</h3>
-                <p>📍 {selectedBank.location}</p>
-                <p>📞 {selectedBank.contact}</p>
-                <p>🏥 {selectedBank.type}</p>
+                <p>📍 {selectedBank.address}</p>
+                <p>📞 {selectedBank.mobile}</p>
 
-                <h4>🩸 Available Blood</h4>
+                <h4>🩸 Blood Inventory</h4>
                 <div style={styles.grid}>
-                  {Object.entries(selectedBank.blood).map(([g,u])=>(
-                    <div key={g} style={styles.smallCard}>{g}: {u} units</div>
+                  {inventory
+                    .filter(i => i.name === selectedBank.name)
+                    .map((i,idx)=>(
+                      <div key={idx} style={styles.smallCard}>
+                        {i.blood_group}: {i.units_available} units
+                      </div>
                   ))}
                 </div>
               </div>
@@ -145,52 +110,71 @@ const AdminDashboard = () => {
           </>
         );
 
+      /* ===== ACTIVE REQUESTS (RESTORED & REAL) ===== */
       case "requests":
-        return <Table title="🩸 Active Requests"
-          headers={["Hospital","Blood","Status"]}
-          rows={[
-            ["Civil Hospital","AB+","Waiting"],
-            ["City Hospital","O-","Accepted"]
-          ]} />;
+        return (
+          <Table
+            title="🩸 Active Requests"
+            headers={["Hospital","Blood","Status"]}
+            rows={requests.map(r=>[
+              r.hospital_name,
+              r.blood_group,
+              r.status
+            ])}
+          />
+        );
 
+      /* ===== CREATE REQUEST (CONNECTED TO DB) ===== */
       case "create":
         return (
           <div style={styles.formCard} className="fadeIn">
             <h2>🚨 Create Emergency Request</h2>
-            <select style={styles.input}>
-              <option>Select Blood Group</option>
+
+            <select
+              style={styles.input}
+              value={reqHospital}
+              onChange={(e)=>setReqHospital(e.target.value)}
+            >
+              <option value="">Select Hospital</option>
+              {hospitals.map(h=>(
+                <option key={h.hospital_id} value={h.hospital_id}>
+                  {h.hospital_name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              style={styles.input}
+              value={reqBlood}
+              onChange={(e)=>setReqBlood(e.target.value)}
+            >
+              <option value="">Select Blood Group</option>
               {["A+","A-","B+","B-","AB+","AB-","O+","O-"].map(b=>(
                 <option key={b}>{b}</option>
               ))}
             </select>
-            <button style={styles.primaryBtn}>Send Request</button>
+
+            <button style={styles.primaryBtn} onClick={createRequest}>
+              Send Request
+            </button>
           </div>
         );
 
-      case "units":
-        return (
-          <>
-            <h2 style={styles.title}>📊 Total Blood Units</h2>
-            <div style={styles.grid}>
-              {Object.entries(totalBloodUnits).map(([g,u])=>(
-                <div key={g} style={styles.glassCard} className="card3d">
-                  <h3>{g}</h3>
-                  <p>{u} Units</p>
-                </div>
-              ))}
-            </div>
-          </>
-        );
-
+      /* ===== MONTHLY REPORT (FROM admin_reports) ===== */
       case "report":
         return (
           <>
-            <h2 style={styles.title}>📅 Monthly Report</h2>
+            <h2 style={styles.title}>📅 Monthly Reports</h2>
             <div style={styles.grid}>
-              <StatCard label="New Donors" value="24" />
-              <StatCard label="Blood Requests" value="18" />
-              <StatCard label="Units Used" value="42" />
-              <StatCard label="Active Hospitals" value="6" />
+              {reports.map((r)=>(
+                <div key={r.report_id} style={styles.glassCard} className="card3d">
+                  <h3>{r.report_month}</h3>
+                  <p>Total Requests: {r.total_requests}</p>
+                  <p>Pending: {r.pending_requests}</p>
+                  <p>Completed: {r.completed_requests}</p>
+                  <p>Blood Units: {r.total_blood_units}</p>
+                </div>
+              ))}
             </div>
           </>
         );
@@ -212,7 +196,6 @@ const AdminDashboard = () => {
         <Menu label="Blood Banks" onClick={()=>setActive("bloodbanks")} />
         <Menu label="Active Requests" onClick={()=>setActive("requests")} />
         <Menu label="Create Request" onClick={()=>setActive("create")} />
-        <Menu label="Blood Units" onClick={()=>setActive("units")} />
         <Menu label="Monthly Report" onClick={()=>setActive("report")} />
 
         <button style={styles.logout}
@@ -221,9 +204,7 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* Content */}
       <div style={styles.content}>{renderSection()}</div>
-
       <style>{css}</style>
     </div>
   );
@@ -249,14 +230,7 @@ const Table = ({ title, headers, rows }) => (
   </div>
 );
 
-const StatCard = ({ label, value }) => (
-  <div style={styles.glassCard} className="card3d">
-    <h2>{value}</h2>
-    <p>{label}</p>
-  </div>
-);
-
-/* ================= STYLES ================= */
+/* ================= STYLES & CSS (UNCHANGED) ================= */
 
 const styles = {
   page:{display:"flex",minHeight:"100vh",
@@ -280,32 +254,8 @@ const styles = {
   formCard:{width:320,background:"#fff",padding:20,borderRadius:16},
   input:{width:"100%",padding:10,marginBottom:10},
   primaryBtn:{width:"100%",padding:10,background:"#1565c0",
-    color:"#fff",border:"none",borderRadius:8},
-
-  /* ===== Activity Styles ===== */
-  activityCard:{
-    background:"#fff",
-    padding:20,
-    borderRadius:16,
-    boxShadow:"0 10px 25px rgba(0,0,0,0.15)"
-  },
-  activityItem:{
-    borderBottom:"1px solid #eee",
-    padding:"10px 0"
-  },
-  activityHospital:{
-    fontWeight:"bold"
-  },
-  activityText:{
-    fontSize:14
-  },
-  activityTime:{
-    fontSize:12,
-    color:"#777"
-  }
+    color:"#fff",border:"none",borderRadius:8}
 };
-
-/* ================= ANIMATION ================= */
 
 const css = `
 .fadeIn{animation:fade 0.5s ease;}

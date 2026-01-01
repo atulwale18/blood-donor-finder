@@ -2,6 +2,30 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 
+/* ================= ADMIN OVERVIEW ACTIVITY ================= */
+router.get("/activity", (req, res) => {
+  const sql = `
+    SELECT 
+      h.hospital_name,
+      er.blood_group,
+      er.status,
+      er.created_at
+    FROM emergency_requests er
+    JOIN hospitals h ON h.hospital_id = er.hospital_id
+    ORDER BY er.created_at DESC
+    LIMIT 5
+  `;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Failed to load activity" });
+    }
+    res.json(rows);
+  });
+});
+
+
 /* ================= DONORS ================= */
 router.get("/donors", (req, res) => {
   db.query("SELECT name, blood_group, mobile FROM donors", (err, rows) => {

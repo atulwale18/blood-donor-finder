@@ -1,9 +1,43 @@
 const db = require("../config/db");
+const axios = require("axios");
+
+/* =====================
+   HELPER: GET LAT/LON FROM ADDRESS / CITY
+===================== */
+const getLatLngFromCity = async (address, city, district) => {
+  try {
+    // Build a more specific query to avoid ambiguity
+    const query = address
+      ? `${address}, ${city}, ${district}, Maharashtra, India`
+      : `${city}, ${district}, Maharashtra, India`;
+
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      query
+    )}&format=json&limit=1`;
+
+    const res = await axios.get(url, {
+      headers: {
+        "User-Agent": "blood-donor-finder"
+      }
+    });
+
+    if (res.data && res.data.length > 0) {
+      return {
+        latitude: parseFloat(res.data[0].lat),
+        longitude: parseFloat(res.data[0].lon)
+      };
+    }
+  } catch (err) {
+    console.error("Geocoding failed:", err.message);
+  }
+
+  return { latitude: null, longitude: null };
+};
 
 /* =====================
    REGISTER
 ===================== */
-exports.register = (req, res) => {
+exports.register = async (req, res) => {
   let {
     role,
     email,
@@ -15,10 +49,20 @@ exports.register = (req, res) => {
     blood_group,
     last_donation_date,
     latitude,
-    longitude
+    longitude,
+    address,
+    city,
+    district
   } = req.body;
 
   email = email.toLowerCase().trim();
+
+  // 👉 Auto-resolve location ONLY if GPS not provided
+  if ((!latitude || !longitude) && (address || city)) {
+    const loc = await getLatLngFromCity(address, city, district);
+    latitude = loc.latitude;
+    longitude = loc.longitude;
+  }
 
   const userSql = `
     INSERT INTO users (email, password, role)
@@ -37,8 +81,9 @@ exports.register = (req, res) => {
     if (role === "donor") {
       const donorSql = `
         INSERT INTO donors
-        (user_id, name, age, gender, blood_group, mobile, last_donation_date, latitude, longitude)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (user_id, name, age, gender, blood_group, mobile, last_donation_date,
+         latitude, longitude, address, city, district)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       return db.query(
@@ -51,8 +96,11 @@ exports.register = (req, res) => {
           blood_group,
           mobile,
           last_donation_date || null,
-          latitude,
-          longitude
+          latitude || null,
+          longitude || null,
+          address || null,
+          city || null,
+          district || null
         ],
         (err) => {
           if (err) {
@@ -69,13 +117,22 @@ exports.register = (req, res) => {
     if (role === "hospital") {
       const hospitalSql = `
         INSERT INTO hospitals
-        (user_id, hospital_name, mobile, latitude, longitude)
-        VALUES (?, ?, ?, ?, ?)
+        (user_id, hospital_name, mobile, latitude, longitude, address, city, district)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       return db.query(
         hospitalSql,
-        [user_id, name, mobile, latitude, longitude],
+        [
+          user_id,
+          name,
+          mobile,
+          latitude || null,
+          longitude || null,
+          address || null,
+          city || null,
+          district || null
+        ],
         (err) => {
           if (err) {
             console.error(err);
@@ -87,13 +144,12 @@ exports.register = (req, res) => {
       );
     }
 
-    // ===== ADMIN REGISTER (optional) =====
     return res.json({ message: "User registered successfully" });
   });
 };
 
 /* =====================
-   LOGIN (FINAL & CORRECT)
+   LOGIN (UNCHANGED)
 ===================== */
 exports.login = (req, res) => {
   let { email, password } = req.body;
@@ -119,7 +175,6 @@ exports.login = (req, res) => {
 
     const user = users[0];
 
-    // ===== DONOR LOGIN =====
     if (user.role === "donor") {
       const donorSql = `SELECT donor_id FROM donors WHERE user_id = ?`;
 
@@ -137,7 +192,6 @@ exports.login = (req, res) => {
       });
     }
 
-    // ===== HOSPITAL LOGIN =====
     if (user.role === "hospital") {
       const hospitalSql = `SELECT hospital_id FROM hospitals WHERE user_id = ?`;
 
@@ -155,7 +209,6 @@ exports.login = (req, res) => {
       });
     }
 
-    // ===== ADMIN LOGIN =====
     if (user.role === "admin") {
       return res.json({
         message: "Login success",

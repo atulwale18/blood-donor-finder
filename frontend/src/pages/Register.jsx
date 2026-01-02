@@ -16,7 +16,10 @@ const Register = () => {
     blood_group: "",
     last_donation_date: "",
     latitude: "",
-    longitude: ""
+    longitude: "",
+    address: "",
+    city: "",
+    district: ""
   });
 
   const handleChange = (e) => {
@@ -100,6 +103,28 @@ const Register = () => {
           style={styles.input}
         />
 
+        {/* Address fields (NEW) */}
+        <input
+          name="address"
+          placeholder="Address / Village / Area"
+          onChange={handleChange}
+          style={styles.input}
+        />
+
+        <input
+          name="city"
+          placeholder="City"
+          onChange={handleChange}
+          style={styles.input}
+        />
+
+        <input
+          name="district"
+          placeholder="District"
+          onChange={handleChange}
+          style={styles.input}
+        />
+
         {/* Donor-only */}
         {role === "donor" && (
           <div className="fadeSection">
@@ -148,21 +173,21 @@ const Register = () => {
 
         {/* Location */}
         <input
-          placeholder="Latitude"
+          placeholder="Latitude (optional)"
           value={form.latitude}
           readOnly
           style={styles.input}
         />
 
         <input
-          placeholder="Longitude"
+          placeholder="Longitude (optional)"
           value={form.longitude}
           readOnly
           style={styles.input}
         />
 
         <button onClick={getLocation} style={styles.locationBtn}>
-          📍 Get Current Location
+          📍 Use My Current Location (optional)
         </button>
 
         <button onClick={handleRegister} style={styles.registerBtn}>
@@ -177,7 +202,6 @@ const Register = () => {
         </p>
       </div>
 
-      {/* Animation CSS */}
       <style>{animationCSS}</style>
     </div>
   );

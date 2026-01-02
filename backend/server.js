@@ -2,36 +2,38 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const emergencyRoutes = require("./routes/emergencyRoutes");
 
-app.use(express.json());
-app.use("/api/emergency", emergencyRoutes);
-
-
+/* =====================
+   MIDDLEWARE
+===================== */
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
+/* =====================
+   ROUTES IMPORT
+===================== */
 const authRoutes = require("./routes/authRoutes");
 const donorRoutes = require("./routes/donorRoutes");
 const hospitalRoutes = require("./routes/hospitalRoutes");
+const emergencyRoutes = require("./routes/emergencyRoutes");
 const bloodBankRoutes = require("./routes/bloodBankRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
-
-
-
+/* =====================
+   ROUTES USE
+===================== */
 app.use("/api/auth", authRoutes);
 app.use("/api/donor", donorRoutes);
 app.use("/api/hospital", hospitalRoutes);
-app.use("/api", require("./routes/hospitalRoutes"));
-app.use("/api", require("./routes/emergencyRoutes"));
-app.use("/api/profile", require("./routes/profileRoutes"));
+app.use("/api/emergency", emergencyRoutes);
+app.use("/api/profile", profileRoutes);
 app.use("/api/bloodbank", bloodBankRoutes);
 app.use("/api/admin", adminRoutes);
 
-
+/* =====================
+   SERVER
+===================== */
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
-

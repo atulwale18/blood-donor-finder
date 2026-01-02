@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -8,6 +8,19 @@ const DonorDashboard = () => {
 
   const [donor, setDonor] = useState(null);
   const [available, setAvailable] = useState(true);
+  const [emergency, setEmergency] = useState(null);
+
+  // 🔔 Fetch real emergency request for donor
+  const fetchEmergency = useCallback(() => {
+    axios
+      .get(`http://localhost:5000/api/emergency/donor/${userId}`)
+      .then((res) => {
+        if (res.data) {
+          setEmergency(res.data);
+        }
+      })
+      .catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -17,9 +30,39 @@ const DonorDashboard = () => {
 
     axios
       .get(`http://localhost:5000/api/profile/donor/${userId}`)
-      .then((res) => setDonor(res.data))
+      .then((res) => {
+        setDonor(res.data);
+        fetchEmergency();
+      })
       .catch(() => alert("Failed to load donor data"));
-  }, [userId, navigate]);
+  }, [userId, navigate, fetchEmergency]);
+
+  // ✅ Accept emergency request (FIXED)
+  const handleAccept = () => {
+    axios
+      .post("http://localhost:5000/api/emergency/accept", {
+        request_id: emergency.request_id
+      })
+      .then(() => {
+        alert("Emergency request accepted 🙏");
+        setAvailable(false);
+        setEmergency(null);
+      })
+      .catch(() => alert("Failed to accept request"));
+  };
+
+  // ❌ Decline emergency request (FIXED)
+  const handleDecline = () => {
+    axios
+      .post("http://localhost:5000/api/emergency/decline", {
+        request_id: emergency.request_id
+      })
+      .then(() => {
+        alert("Request declined");
+        setEmergency(null);
+      })
+      .catch(() => alert("Failed to decline request"));
+  };
 
   if (!donor) {
     return <div style={styles.loading}>Loading...</div>;
@@ -28,7 +71,6 @@ const DonorDashboard = () => {
   return (
     <div style={styles.page}>
       <div style={styles.card} className="fadeIn">
-        {/* Header */}
         <h2 style={styles.title}>🩸 Donor Dashboard</h2>
 
         {/* Profile */}
@@ -38,9 +80,33 @@ const DonorDashboard = () => {
           </div>
           <div>
             <h3>{donor.name}</h3>
-            <p style={{ color: "#666" }}>{donor.email || "Registered Donor"}</p>
+            <p style={{ color: "#666" }}>
+              {donor.email || "Registered Donor"}
+            </p>
           </div>
         </div>
+
+        {/* 🔔 Emergency Request Notification */}
+        {emergency && (
+          <div style={styles.emergencyCard}>
+            <h3 style={styles.emergencyTitle}>
+              🚨 Emergency Blood Request
+            </h3>
+            <p><b>Blood Group:</b> {emergency.blood_group}</p>
+            <p><b>Hospital:</b> {emergency.hospital_name}</p>
+            <p><b>Distance:</b> {emergency.distance_km} km</p>
+            <p><b>Requested:</b> {emergency.created_at}</p>
+
+            <div style={styles.emergencyBtns}>
+              <button style={styles.acceptBtn} onClick={handleAccept}>
+                Accept
+              </button>
+              <button style={styles.declineBtn} onClick={handleDecline}>
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Info Grid */}
         <div style={styles.grid}>
@@ -48,24 +114,21 @@ const DonorDashboard = () => {
             <p className="label">Blood Group</p>
             <h4>{donor.blood_group}</h4>
           </div>
-
           <div style={styles.box}>
             <p className="label">Mobile</p>
             <h4>{donor.mobile}</h4>
           </div>
-
           <div style={styles.box}>
             <p className="label">Gender</p>
             <h4>{donor.gender}</h4>
           </div>
-
           <div style={styles.box}>
             <p className="label">Last Donation</p>
             <h4>{donor.last_donation_date || "Not yet"}</h4>
           </div>
         </div>
 
-        {/* Availability Buttons */}
+        {/* Availability */}
         <div style={styles.btnRow}>
           <button
             style={{
@@ -88,7 +151,6 @@ const DonorDashboard = () => {
           </button>
         </div>
 
-        {/* Logout */}
         <button
           style={styles.logout}
           onClick={() => {
@@ -100,11 +162,11 @@ const DonorDashboard = () => {
         </button>
       </div>
 
-      {/* Animation CSS */}
       <style>{animationCSS}</style>
     </div>
   );
 };
+
 
 /* ================= STYLES ================= */
 
@@ -123,10 +185,7 @@ const styles = {
     borderRadius: 16,
     boxShadow: "0 15px 40px rgba(0,0,0,0.25)"
   },
-  title: {
-    textAlign: "center",
-    marginBottom: 20
-  },
+  title: { textAlign: "center", marginBottom: 20 },
   profile: {
     display: "flex",
     gap: 15,
@@ -143,6 +202,40 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center"
+  },
+  emergencyCard: {
+    background: "#fff3f3",
+    border: "1px solid #ffcdd2",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 20
+  },
+  emergencyTitle: {
+    color: "#c62828",
+    marginBottom: 10
+  },
+  emergencyBtns: {
+    display: "flex",
+    gap: 10,
+    marginTop: 10
+  },
+  acceptBtn: {
+    flex: 1,
+    padding: 8,
+    background: "#2e7d32",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer"
+  },
+  declineBtn: {
+    flex: 1,
+    padding: 8,
+    background: "#b71c1c",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer"
   },
   grid: {
     display: "grid",

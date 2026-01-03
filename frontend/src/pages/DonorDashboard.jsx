@@ -10,18 +10,27 @@ const DonorDashboard = () => {
   const [available, setAvailable] = useState(true);
   const [emergency, setEmergency] = useState(null);
 
-  // 🔔 Fetch real emergency request for donor
+  /* =========================
+     FETCH EMERGENCY (FIXED)
+  ========================= */
   const fetchEmergency = useCallback(() => {
     axios
       .get(`http://localhost:5000/api/emergency/donor/${userId}`)
       .then((res) => {
         if (res.data) {
           setEmergency(res.data);
+        } else {
+          setEmergency(null); // 🔥 IMPORTANT FIX
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setEmergency(null);
+      });
   }, [userId]);
 
+  /* =========================
+     LOAD DONOR PROFILE
+  ========================= */
   useEffect(() => {
     if (!userId) {
       navigate("/");
@@ -37,11 +46,16 @@ const DonorDashboard = () => {
       .catch(() => alert("Failed to load donor data"));
   }, [userId, navigate, fetchEmergency]);
 
-  // ✅ Accept emergency request
+  /* =========================
+     ACCEPT EMERGENCY
+  ========================= */
   const handleAccept = () => {
+    if (!emergency) return;
+
     axios
       .post("http://localhost:5000/api/emergency/accept", {
-        request_id: emergency.request_id
+        request_id: emergency.request_id,
+        donor_id: userId
       })
       .then(() => {
         alert("Emergency request accepted 🙏");
@@ -51,8 +65,12 @@ const DonorDashboard = () => {
       .catch(() => alert("Failed to accept request"));
   };
 
-  // ✅ Decline emergency request (FIXED)
+  /* =========================
+     DECLINE EMERGENCY
+  ========================= */
   const handleDecline = () => {
+    if (!emergency) return;
+
     axios
       .post("http://localhost:5000/api/emergency/decline", {
         request_id: emergency.request_id
@@ -73,7 +91,7 @@ const DonorDashboard = () => {
       <div style={styles.card} className="fadeIn">
         <h2 style={styles.title}>🩸 Donor Dashboard</h2>
 
-        {/* Profile */}
+        {/* PROFILE */}
         <div style={styles.profile}>
           <div style={styles.avatar}>
             {donor.name.charAt(0).toUpperCase()}
@@ -86,7 +104,7 @@ const DonorDashboard = () => {
           </div>
         </div>
 
-        {/* 🔔 Emergency Request */}
+        {/* EMERGENCY CARD */}
         {emergency && (
           <div style={styles.emergencyCard}>
             <h3 style={styles.emergencyTitle}>🚨 Emergency Blood Request</h3>
@@ -106,7 +124,7 @@ const DonorDashboard = () => {
           </div>
         )}
 
-        {/* Info Grid */}
+        {/* INFO GRID */}
         <div style={styles.grid}>
           <div style={styles.box}>
             <p className="label">Blood Group</p>
@@ -126,7 +144,7 @@ const DonorDashboard = () => {
           </div>
         </div>
 
-        {/* Availability */}
+        {/* AVAILABILITY */}
         <div style={styles.btnRow}>
           <button
             style={{

@@ -29,13 +29,16 @@ exports.createEmergency = (req, res) => {
     return res.status(400).json({ message: "Missing data" });
   }
 
+  // 10 minutes expiry for donor
+  const expireAt = new Date(Date.now() + 10 * 60 * 1000);
+
   const sql = `
     INSERT INTO emergency_requests 
-    (hospital_id, blood_group, status, created_at)
-    VALUES (?, ?, 'pending', NOW())
+    (hospital_id, blood_group, status, donor_visible, hospital_visible, donor_expire_at, created_at)
+    VALUES (?, ?, 'pending', 1, 1, ?, NOW())
   `;
 
-  db.query(sql, [hospital_id, blood_group], (err) => {
+  db.query(sql, [hospital_id, blood_group, expireAt], (err) => {
     if (err) {
       console.error("Emergency create error:", err);
       return res.status(500).json({ message: "DB error" });
@@ -66,6 +69,8 @@ exports.getEmergencyForDonor = (req, res) => {
     JOIN donors d ON d.user_id = ?
     WHERE er.blood_group = d.blood_group
       AND er.status = 'pending'
+      AND er.donor_visible = 1
+      AND er.donor_expire_at > NOW()
     ORDER BY er.created_at DESC
     LIMIT 1
   `;
@@ -96,7 +101,6 @@ exports.getEmergencyForDonor = (req, res) => {
 
 /* =========================
    GET EMERGENCY FOR HOSPITAL
-   (WITH DONOR DETAILS)
 ========================= */
 exports.getEmergencyForHospital = (req, res) => {
   const hospitalId = req.params.hospitalId;
@@ -114,6 +118,7 @@ exports.getEmergencyForHospital = (req, res) => {
     LEFT JOIN donors d 
       ON d.donor_id = er.accepted_donor_id
     WHERE er.hospital_id = ?
+      AND er.hospital_visible = 1
     ORDER BY er.created_at DESC
   `;
 
@@ -142,18 +147,27 @@ exports.acceptEmergency = (req, res) => {
     SET status = 'accepted',
         accepted_donor_id = ?
     WHERE request_id = ?
+      AND status = 'pending'
   `;
 
   db.query(sql, [donor_id, request_id], (err, result) => {
-    if (err) {
-      console.error("Accept error:", err);
-      return res.status(500).json({ message: "Failed to accept request" });
+    if (err || result.affectedRows === 0) {
+      return res.status(400).json({
+        message: "Request already accepted or invalid"
+      });
     }
+
+    // After 1 minute hide from donor only
+    setTimeout(() => {
+      db.query(
+        "UPDATE emergency_requests SET donor_visible = 0 WHERE request_id = ?",
+        [request_id]
+      );
+    }, 60000);
 
     res.json({ message: "Emergency accepted" });
   });
 };
-
 
 /* =========================
    DECLINE EMERGENCY
@@ -173,14 +187,22 @@ exports.declineEmergency = (req, res) => {
   `;
 
   db.query(sql, [request_id], (err, result) => {
-    if (err) {
-      console.error("Decline error:", err);
-      return res.status(500).json({ message: "Failed to decline request" });
-    }
-
-    if (result.affectedRows === 0) {
+    if (err || result.affectedRows === 0) {
       return res.status(400).json({ message: "Request already handled" });
     }
+
+    // After 1 minute hide from BOTH donor & hospital
+    setTimeout(() => {
+      db.query(
+        `
+        UPDATE emergency_requests
+        SET donor_visible = 0,
+            hospital_visible = 0
+        WHERE request_id = ?
+        `,
+        [request_id]
+      );
+    }, 60000);
 
     res.json({ message: "Request declined successfully" });
   });

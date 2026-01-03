@@ -4,7 +4,7 @@ const db = require("../config/db");
    DISTANCE CALCULATION
 ========================= */
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Earth radius in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
 
@@ -12,14 +12,15 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(lat1 * Math.PI / 180) *
       Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Number((R * c).toFixed(2));
 }
 
 /* =========================
-   CREATE EMERGENCY
+   CREATE EMERGENCY (Hospital)
 ========================= */
 exports.createEmergency = (req, res) => {
   const { hospital_id, blood_group } = req.body;
@@ -29,13 +30,14 @@ exports.createEmergency = (req, res) => {
   }
 
   const sql = `
-    INSERT INTO emergency_requests (hospital_id, blood_group, status, created_at)
+    INSERT INTO emergency_requests 
+    (hospital_id, blood_group, status, created_at)
     VALUES (?, ?, 'pending', NOW())
   `;
 
   db.query(sql, [hospital_id, blood_group], (err) => {
     if (err) {
-      console.log("Emergency create error:", err);
+      console.error("Emergency create error:", err);
       return res.status(500).json({ message: "DB error" });
     }
 
@@ -54,7 +56,7 @@ exports.getEmergencyForDonor = (req, res) => {
       er.request_id,
       er.blood_group,
       er.created_at,
-      h.hospital_name AS hospital_name,
+      h.hospital_name,
       h.latitude AS h_lat,
       h.longitude AS h_lon,
       d.latitude AS d_lat,
@@ -69,12 +71,7 @@ exports.getEmergencyForDonor = (req, res) => {
   `;
 
   db.query(sql, [userId], (err, result) => {
-    if (err) {
-      console.error("Emergency fetch error:", err);
-      return res.json(null);
-    }
-
-    if (result.length === 0) {
+    if (err || result.length === 0) {
       return res.json(null);
     }
 
@@ -97,32 +94,66 @@ exports.getEmergencyForDonor = (req, res) => {
   });
 };
 
+/* =========================
+   GET EMERGENCY FOR HOSPITAL
+   (WITH DONOR DETAILS)
+========================= */
+exports.getEmergencyForHospital = (req, res) => {
+  const hospitalId = req.params.hospitalId;
+
+  const sql = `
+    SELECT 
+      er.request_id,
+      er.blood_group,
+      er.status,
+      er.created_at,
+      d.name AS donor_name,
+      d.mobile AS donor_mobile,
+      d.city AS donor_city
+    FROM emergency_requests er
+    LEFT JOIN donors d 
+      ON d.donor_id = er.accepted_donor_id
+    WHERE er.hospital_id = ?
+    ORDER BY er.created_at DESC
+  `;
+
+  db.query(sql, [hospitalId], (err, result) => {
+    if (err) {
+      console.error("Hospital emergency fetch error:", err);
+      return res.status(500).json({ message: "DB error" });
+    }
+
+    res.json(result);
+  });
+};
 
 /* =========================
-   ACCEPT EMERGENCY
+   ACCEPT EMERGENCY (Donor)
 ========================= */
 exports.acceptEmergency = (req, res) => {
-  const { request_id } = req.body;
+  const { request_id, donor_id } = req.body;
 
-  if (!request_id) {
-    return res.status(400).json({ message: "Missing request id" });
+  if (!request_id || !donor_id) {
+    return res.status(400).json({ message: "Missing data" });
   }
 
   const sql = `
     UPDATE emergency_requests
-    SET status = 'accepted'
+    SET status = 'accepted',
+        accepted_donor_id = ?
     WHERE request_id = ?
   `;
 
-  db.query(sql, [request_id], (err) => {
+  db.query(sql, [donor_id, request_id], (err, result) => {
     if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "DB error" });
+      console.error("Accept error:", err);
+      return res.status(500).json({ message: "Failed to accept request" });
     }
 
     res.json({ message: "Emergency accepted" });
   });
 };
+
 
 /* =========================
    DECLINE EMERGENCY
@@ -131,21 +162,26 @@ exports.declineEmergency = (req, res) => {
   const { request_id } = req.body;
 
   if (!request_id) {
-    return res.status(400).json({ message: "Missing request id" });
+    return res.status(400).json({ message: "Request ID required" });
   }
 
   const sql = `
     UPDATE emergency_requests
     SET status = 'declined'
     WHERE request_id = ?
+      AND status = 'pending'
   `;
 
-  db.query(sql, [request_id], (err) => {
+  db.query(sql, [request_id], (err, result) => {
     if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "DB error" });
+      console.error("Decline error:", err);
+      return res.status(500).json({ message: "Failed to decline request" });
     }
 
-    res.json({ message: "Emergency declined" });
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ message: "Request already handled" });
+    }
+
+    res.json({ message: "Request declined successfully" });
   });
 };

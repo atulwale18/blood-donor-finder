@@ -37,7 +37,7 @@ const DonorDashboard = () => {
       .catch(() => alert("Failed to load donor data"));
   }, [userId, navigate, fetchEmergency]);
 
-  // ✅ Accept emergency request (FIXED)
+  // ✅ Accept emergency request
   const handleAccept = () => {
     axios
       .post("http://localhost:5000/api/emergency/accept", {
@@ -51,7 +51,7 @@ const DonorDashboard = () => {
       .catch(() => alert("Failed to accept request"));
   };
 
-  // ❌ Decline emergency request (FIXED)
+  // ✅ Decline emergency request (FIXED)
   const handleDecline = () => {
     axios
       .post("http://localhost:5000/api/emergency/decline", {
@@ -86,12 +86,10 @@ const DonorDashboard = () => {
           </div>
         </div>
 
-        {/* 🔔 Emergency Request Notification */}
+        {/* 🔔 Emergency Request */}
         {emergency && (
           <div style={styles.emergencyCard}>
-            <h3 style={styles.emergencyTitle}>
-              🚨 Emergency Blood Request
-            </h3>
+            <h3 style={styles.emergencyTitle}>🚨 Emergency Blood Request</h3>
             <p><b>Blood Group:</b> {emergency.blood_group}</p>
             <p><b>Hospital:</b> {emergency.hospital_name}</p>
             <p><b>Distance:</b> {emergency.distance_km} km</p>
@@ -167,7 +165,6 @@ const DonorDashboard = () => {
   );
 };
 
-
 /* ================= STYLES ================= */
 
 const styles = {
@@ -210,15 +207,8 @@ const styles = {
     borderRadius: 12,
     marginBottom: 20
   },
-  emergencyTitle: {
-    color: "#c62828",
-    marginBottom: 10
-  },
-  emergencyBtns: {
-    display: "flex",
-    gap: 10,
-    marginTop: 10
-  },
+  emergencyTitle: { color: "#c62828", marginBottom: 10 },
+  emergencyBtns: { display: "flex", gap: 10, marginTop: 10 },
   acceptBtn: {
     flex: 1,
     padding: 8,
@@ -243,32 +233,10 @@ const styles = {
     gap: 12,
     marginBottom: 20
   },
-  box: {
-    background: "#f5f5f5",
-    padding: 12,
-    borderRadius: 10
-  },
-  btnRow: {
-    display: "flex",
-    gap: 10,
-    marginBottom: 15
-  },
-  availBtn: {
-    flex: 1,
-    padding: 10,
-    border: "none",
-    borderRadius: 8,
-    color: "#fff",
-    cursor: "pointer"
-  },
-  notAvailBtn: {
-    flex: 1,
-    padding: 10,
-    border: "none",
-    borderRadius: 8,
-    color: "#fff",
-    cursor: "pointer"
-  },
+  box: { background: "#f5f5f5", padding: 12, borderRadius: 10 },
+  btnRow: { display: "flex", gap: 10, marginBottom: 15 },
+  availBtn: { flex: 1, padding: 10, border: "none", borderRadius: 8, color: "#fff" },
+  notAvailBtn: { flex: 1, padding: 10, border: "none", borderRadius: 8, color: "#fff" },
   logout: {
     width: "100%",
     padding: 10,
@@ -288,21 +256,13 @@ const styles = {
   }
 };
 
-/* ================= ANIMATION ================= */
-
 const animationCSS = `
 .fadeIn {
   animation: fadeIn 0.7s ease-in-out;
 }
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 .label {
   font-size: 12px;

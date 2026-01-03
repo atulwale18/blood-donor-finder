@@ -13,6 +13,14 @@ router.post("/create", emergencyController.createEmergency);
 router.get("/donor/:userId", emergencyController.getEmergencyForDonor);
 
 /* =========================
+   GET EMERGENCY FOR HOSPITAL ✅ (THIS WAS MISSING)
+========================= */
+router.get(
+  "/hospital/:hospitalId",
+  emergencyController.getEmergencyForHospital
+);
+
+/* =========================
    ACCEPT / DECLINE EMERGENCY
 ========================= */
 router.post("/accept", emergencyController.acceptEmergency);

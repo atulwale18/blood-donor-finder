@@ -8,9 +8,10 @@ const HospitalDashboard = () => {
 
   const [hospital, setHospital] = useState(null);
   const [bloodBanks, setBloodBanks] = useState([]);
-
-  // ✅ ADDED (required)
   const [bloodGroup, setBloodGroup] = useState("O+");
+
+  // ✅ NEW: emergency list
+  const [emergencies, setEmergencies] = useState([]);
 
   useEffect(() => {
     if (!userId) {
@@ -18,13 +19,14 @@ const HospitalDashboard = () => {
       return;
     }
 
-    // Load hospital profile
+    let hospitalLoaded = false;
+
     axios
       .get(`http://localhost:5000/api/hospital/profile/${userId}`)
       .then((res) => {
+        hospitalLoaded = true;
         setHospital(res.data);
 
-        // Load nearby blood banks using hospital location
         return axios.get("http://localhost:5000/api/bloodbank/nearby", {
           params: {
             latitude: res.data.latitude,
@@ -32,22 +34,56 @@ const HospitalDashboard = () => {
           }
         });
       })
-      .then((res) => setBloodBanks(res.data))
-      .catch(() => alert("Failed to load hospital data"));
+      .then((res) => {
+        setBloodBanks(res.data || []);
+      })
+      .catch(() => {
+        if (!hospitalLoaded) {
+          alert("Failed to load hospital data");
+        } else {
+          setBloodBanks([]);
+        }
+      });
   }, [userId, navigate]);
 
-  const sendEmergency = () => {
-    alert("Emergency request sent to nearby donors 🚨");
+  // ✅ NEW: fetch emergency status for hospital
+  useEffect(() => {
+    if (!hospital) return;
+
+    axios
+      .get(
+        `http://localhost:5000/api/emergency/hospital/${hospital.hospital_id}`
+      )
+      .then((res) => setEmergencies(res.data || []))
+      .catch(() => {});
+  }, [hospital]);
+
+  /* =====================
+     SEND EMERGENCY REQUEST
+  ===================== */
+  const sendEmergency = async () => {
+    try {
+      await axios.post("http://localhost:5000/api/emergency/create", {
+        hospital_id: hospital.hospital_id,
+        blood_group: bloodGroup
+      });
+
+      alert("Emergency request sent to nearby donors 🚨");
+    } catch {
+      alert("Failed to send emergency request");
+    }
   };
 
-  // ✅ UPDATED (real emergency check)
+  /* =====================
+     EMERGENCY BLOOD CHECK
+  ===================== */
   const emergencyBloodCheck = async () => {
     try {
       const res = await axios.get(
         "http://localhost:5000/api/bloodbank/emergency",
         {
           params: {
-            blood_group: encodeURIComponent(bloodGroup), // ✅ HERE
+            blood_group: encodeURIComponent(bloodGroup),
             latitude: hospital.latitude,
             longitude: hospital.longitude
           }
@@ -55,7 +91,9 @@ const HospitalDashboard = () => {
       );
 
       if (res.data.length === 0) {
-        alert("Required blood group is not available. Please contact nearby blood banks.");
+        alert(
+          "Required blood group is not available. Please contact nearby blood banks."
+        );
         return;
       }
 
@@ -64,7 +102,7 @@ const HospitalDashboard = () => {
       alert(
         `Blood Available!\n\nBlood Bank: ${bank.name}\nBlood Group: ${bank.blood_group}\nUnits: ${bank.units_available}\nPhone: ${bank.mobile}`
       );
-    } catch (err) {
+    } catch {
       alert("Failed to check emergency blood availability");
     }
   };
@@ -76,7 +114,6 @@ const HospitalDashboard = () => {
   return (
     <div style={styles.page}>
       <div style={styles.card} className="fadeIn">
-        {/* Title */}
         <h2 style={styles.title}>🏥 Hospital Dashboard</h2>
 
         {/* Profile */}
@@ -98,13 +135,6 @@ const HospitalDashboard = () => {
             Send emergency blood request to nearby donors.
           </p>
 
-          <button style={styles.emergencyBtn} onClick={sendEmergency}>
-            Send Emergency Request
-          </button>
-        </div>
-
-        {/* ✅ Blood group selector (minimal, no style changes) */}
-        <div style={styles.section}>
           <select
             value={bloodGroup}
             onChange={(e) => setBloodGroup(e.target.value)}
@@ -120,15 +150,63 @@ const HospitalDashboard = () => {
             <option>AB-</option>
           </select>
 
-          <button
-            style={styles.emergencyBtn}
-            onClick={emergencyBloodCheck}
-          >
+          <button style={styles.emergencyBtn} onClick={sendEmergency}>
+            Send Emergency Request
+          </button>
+        </div>
+
+        {/* Emergency Blood Check */}
+        <div style={styles.section}>
+          <button style={styles.emergencyBtn} onClick={emergencyBloodCheck}>
             Emergency Blood Check
           </button>
         </div>
 
-        {/* ================= NEARBY BLOOD BANKS ================= */}
+        {/* ✅ Emergency Status */}
+        <div style={styles.section}>
+          <h4>📌 Emergency Request Status</h4>
+
+          {emergencies.length === 0 ? (
+            <p style={styles.subText}>No emergency requests yet</p>
+          ) : (
+            emergencies.map((e) => (
+              <div
+                key={e.request_id}
+                style={{
+                  border: "1px solid #ddd",
+                  padding: 10,
+                  borderRadius: 8,
+                  marginBottom: 10
+                }}
+              >
+                <p><b>Blood Group:</b> {e.blood_group}</p>
+                <p><b>Status:</b> {e.status}</p>
+
+                {e.status === "accepted" && (
+                  <>
+                    <p><b>Donor Name:</b> {e.donor_name}</p>
+                    <p><b>Mobile:</b> {e.donor_mobile}</p>
+                    <p><b>City:</b> {e.donor_city}</p>
+                  </>
+                )}
+
+                {e.status === "pending" && (
+                  <p style={{ color: "#777" }}>
+                    Waiting for donor response…
+                  </p>
+                )}
+
+                {e.status === "declined" && (
+                  <p style={{ color: "red" }}>
+                    Request declined
+                  </p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Nearby Blood Banks */}
         <div style={styles.section}>
           <h4>🏦 Nearby Blood Banks</h4>
 
@@ -143,7 +221,9 @@ const HospitalDashboard = () => {
 
                 <button
                   style={styles.emergencyBtn}
-                  onClick={() => window.location.href = `tel:${bank.mobile}`}
+                  onClick={() =>
+                    (window.location.href = `tel:${bank.mobile}`)
+                  }
                 >
                   Call Blood Bank
                 </button>
@@ -152,7 +232,6 @@ const HospitalDashboard = () => {
           )}
         </div>
 
-        {/* Logout */}
         <button
           style={styles.logout}
           onClick={() => {
@@ -164,7 +243,6 @@ const HospitalDashboard = () => {
         </button>
       </div>
 
-      {/* Animation */}
       <style>{animationCSS}</style>
     </div>
   );
@@ -187,10 +265,7 @@ const styles = {
     borderRadius: 16,
     boxShadow: "0 15px 40px rgba(0,0,0,0.25)"
   },
-  title: {
-    textAlign: "center",
-    marginBottom: 20
-  },
+  title: { textAlign: "center", marginBottom: 20 },
   profile: {
     display: "flex",
     gap: 15,
@@ -208,21 +283,10 @@ const styles = {
     justifyContent: "center",
     alignItems: "center"
   },
-  email: {
-    color: "#555",
-    fontSize: 14
-  },
-  mobile: {
-    fontSize: 14
-  },
-  section: {
-    marginBottom: 20
-  },
-  subText: {
-    fontSize: 13,
-    color: "#666",
-    marginBottom: 10
-  },
+  email: { color: "#555", fontSize: 14 },
+  mobile: { fontSize: 14 },
+  section: { marginBottom: 20 },
+  subText: { fontSize: 13, color: "#666", marginBottom: 10 },
   emergencyBtn: {
     width: "100%",
     padding: 12,

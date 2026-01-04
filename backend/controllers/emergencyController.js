@@ -29,7 +29,6 @@ exports.createEmergency = (req, res) => {
     return res.status(400).json({ message: "Missing data" });
   }
 
-  // 10 minutes expiry for donor
   const expireAt = new Date(Date.now() + 10 * 60 * 1000);
 
   const sql = `
@@ -94,7 +93,9 @@ exports.getEmergencyForDonor = (req, res) => {
       blood_group: row.blood_group,
       hospital_name: row.hospital_name,
       created_at: row.created_at,
-      distance_km: distance
+      distance_km: distance,
+      h_lat: row.h_lat,
+      h_lon: row.h_lon
     });
   });
 };
@@ -157,7 +158,6 @@ exports.acceptEmergency = (req, res) => {
       });
     }
 
-    // After 1 minute hide from donor only
     setTimeout(() => {
       db.query(
         "UPDATE emergency_requests SET donor_visible = 0 WHERE request_id = ?",
@@ -191,7 +191,6 @@ exports.declineEmergency = (req, res) => {
       return res.status(400).json({ message: "Request already handled" });
     }
 
-    // After 1 minute hide from BOTH donor & hospital
     setTimeout(() => {
       db.query(
         `
@@ -205,5 +204,36 @@ exports.declineEmergency = (req, res) => {
     }, 60000);
 
     res.json({ message: "Request declined successfully" });
+  });
+};
+
+/* =========================
+   COMPLETE DONATION (Hospital) ✅ FIXED
+========================= */
+exports.completeEmergency = (req, res) => {
+  const { request_id } = req.body;
+
+  if (!request_id) {
+    return res.status(400).json({ message: "Request ID required" });
+  }
+
+  const sql = `
+    UPDATE emergency_requests
+    SET status = 'completed',
+        completed_at = NOW(),
+        donor_visible = 0,
+        hospital_visible = 0
+    WHERE request_id = ?
+  `;
+
+  db.query(sql, [request_id], (err, result) => {
+    if (err || result.affectedRows === 0) {
+      console.error("Complete donation error:", err);
+      return res.status(500).json({
+        message: "Failed to complete donation"
+      });
+    }
+
+    res.json({ message: "Donation marked as completed" });
   });
 };

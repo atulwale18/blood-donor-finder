@@ -9,9 +9,10 @@ const DonorDashboard = () => {
   const [donor, setDonor] = useState(null);
   const [available, setAvailable] = useState(true);
   const [emergency, setEmergency] = useState(null);
+  const [accepted, setAccepted] = useState(false); // ✅ NEW STATE
 
   /* =========================
-     FETCH EMERGENCY (FIXED)
+     FETCH EMERGENCY
   ========================= */
   const fetchEmergency = useCallback(() => {
     axios
@@ -19,12 +20,15 @@ const DonorDashboard = () => {
       .then((res) => {
         if (res.data) {
           setEmergency(res.data);
+          setAccepted(false); // reset on new request
         } else {
-          setEmergency(null); // 🔥 IMPORTANT FIX
+          setEmergency(null);
+          setAccepted(false);
         }
       })
       .catch(() => {
         setEmergency(null);
+        setAccepted(false);
       });
   }, [userId]);
 
@@ -47,6 +51,15 @@ const DonorDashboard = () => {
   }, [userId, navigate, fetchEmergency]);
 
   /* =========================
+     OPEN MAP
+  ========================= */
+  const openMap = () => {
+    if (!emergency || !emergency.h_lat || !emergency.h_lon) return;
+    const url = `https://www.google.com/maps?q=${emergency.h_lat},${emergency.h_lon}`;
+    window.open(url, "_blank");
+  };
+
+  /* =========================
      ACCEPT EMERGENCY
   ========================= */
   const handleAccept = () => {
@@ -60,7 +73,7 @@ const DonorDashboard = () => {
       .then(() => {
         alert("Emergency request accepted 🙏");
         setAvailable(false);
-        setEmergency(null);
+        setAccepted(true); // ✅ keep emergency data
       })
       .catch(() => alert("Failed to accept request"));
   };
@@ -78,6 +91,7 @@ const DonorDashboard = () => {
       .then(() => {
         alert("Request declined");
         setEmergency(null);
+        setAccepted(false);
       })
       .catch(() => alert("Failed to decline request"));
   };
@@ -113,14 +127,24 @@ const DonorDashboard = () => {
             <p><b>Distance:</b> {emergency.distance_km} km</p>
             <p><b>Requested:</b> {emergency.created_at}</p>
 
-            <div style={styles.emergencyBtns}>
-              <button style={styles.acceptBtn} onClick={handleAccept}>
-                Accept
+            {/* ACCEPT / DECLINE */}
+            {!accepted && (
+              <div style={styles.emergencyBtns}>
+                <button style={styles.acceptBtn} onClick={handleAccept}>
+                  Accept
+                </button>
+                <button style={styles.declineBtn} onClick={handleDecline}>
+                  Decline
+                </button>
+              </div>
+            )}
+
+            {/* MAP AFTER ACCEPT */}
+            {accepted && (
+              <button style={styles.mapBtn} onClick={openMap}>
+                📍 Open Hospital Location
               </button>
-              <button style={styles.declineBtn} onClick={handleDecline}>
-                Decline
-              </button>
-            </div>
+            )}
           </div>
         )}
 
@@ -240,6 +264,16 @@ const styles = {
     flex: 1,
     padding: 8,
     background: "#b71c1c",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer"
+  },
+  mapBtn: {
+    marginTop: 10,
+    width: "100%",
+    padding: 8,
+    background: "#1976d2",
     color: "#fff",
     border: "none",
     borderRadius: 6,

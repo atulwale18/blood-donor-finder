@@ -25,5 +25,6 @@ router.get(
 ========================= */
 router.post("/accept", emergencyController.acceptEmergency);
 router.post("/decline", emergencyController.declineEmergency);
+router.post("/complete", emergencyController.completeEmergency);
 
 module.exports = router;

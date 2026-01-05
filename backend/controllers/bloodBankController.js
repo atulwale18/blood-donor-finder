@@ -1,10 +1,21 @@
 const db = require("../config/db");
 
 /* =========================
-   GET NEARBY BLOOD BANKS
+   GET NEAREST BLOOD BANKS
+   KNN + 15 KM EMERGENCY RANGE
 ========================= */
 exports.getNearbyBloodBanks = (req, res) => {
   const { latitude, longitude } = req.query;
+
+  // Safety check
+  if (!latitude || !longitude) {
+    return res.status(400).json({
+      message: "Hospital location is required to find nearby blood banks"
+    });
+  }
+
+  const K = 5; // Top 5 nearest blood banks
+  const MAX_DISTANCE = 15; // 15 KM emergency radius
 
   const sql = `
     SELECT
@@ -23,16 +34,19 @@ exports.getNearbyBloodBanks = (req, res) => {
         )
       ) AS distance
     FROM blood_banks
-    HAVING distance <= 25
+    WHERE latitude IS NOT NULL
+      AND longitude IS NOT NULL
+    HAVING distance <= ?
     ORDER BY distance ASC
+    LIMIT ?
   `;
 
   db.query(
     sql,
-    [latitude, longitude, latitude],
+    [latitude, longitude, latitude, MAX_DISTANCE, K],
     (err, results) => {
       if (err) {
-        console.error(err);
+        console.error("Blood bank KNN error:", err);
         return res.status(500).json({ message: "Server error" });
       }
 

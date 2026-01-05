@@ -31,8 +31,8 @@ const Register = () => {
       (pos) => {
         setForm({
           ...form,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude
+          latitude: pos.coords.latitude.toFixed(6),
+          longitude: pos.coords.longitude.toFixed(6)
         });
       },
       () => alert("Location permission denied")
@@ -103,7 +103,7 @@ const Register = () => {
           style={styles.input}
         />
 
-        {/* Address fields (NEW) */}
+        {/* Address fields */}
         <input
           name="address"
           placeholder="Address / Village / Area"
@@ -171,18 +171,24 @@ const Register = () => {
           </div>
         )}
 
-        {/* Location */}
+        {/* Location (MANUAL + AUTO) */}
         <input
+          type="number"
+          step="any"
+          name="latitude"
           placeholder="Latitude (optional)"
           value={form.latitude}
-          readOnly
+          onChange={handleChange}
           style={styles.input}
         />
 
         <input
+          type="number"
+          step="any"
+          name="longitude"
           placeholder="Longitude (optional)"
           value={form.longitude}
-          readOnly
+          onChange={handleChange}
           style={styles.input}
         />
 

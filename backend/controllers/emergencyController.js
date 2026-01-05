@@ -19,6 +19,8 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return Number((R * c).toFixed(2));
 }
 
+const MAX_DISTANCE = 15;
+
 /* =========================
    CREATE EMERGENCY (Hospital)
 ========================= */
@@ -49,6 +51,7 @@ exports.createEmergency = (req, res) => {
 
 /* =========================
    GET EMERGENCY FOR DONOR
+   ✅ FIXED (SQL DISTANCE FILTER)
 ========================= */
 exports.getEmergencyForDonor = (req, res) => {
   const userId = req.params.userId;
@@ -61,8 +64,15 @@ exports.getEmergencyForDonor = (req, res) => {
       h.hospital_name,
       h.latitude AS h_lat,
       h.longitude AS h_lon,
-      d.latitude AS d_lat,
-      d.longitude AS d_lon
+      (
+        6371 * acos(
+          cos(radians(d.latitude)) *
+          cos(radians(h.latitude)) *
+          cos(radians(h.longitude) - radians(d.longitude)) +
+          sin(radians(d.latitude)) *
+          sin(radians(h.latitude))
+        )
+      ) AS distance
     FROM emergency_requests er
     JOIN hospitals h ON h.hospital_id = er.hospital_id
     JOIN donors d ON d.user_id = ?
@@ -70,30 +80,24 @@ exports.getEmergencyForDonor = (req, res) => {
       AND er.status = 'pending'
       AND er.donor_visible = 1
       AND er.donor_expire_at > NOW()
+    HAVING distance <= ?
     ORDER BY er.created_at DESC
     LIMIT 1
   `;
 
-  db.query(sql, [userId], (err, result) => {
+  db.query(sql, [userId, MAX_DISTANCE], (err, result) => {
     if (err || result.length === 0) {
       return res.json(null);
     }
 
     const row = result[0];
 
-    const distance = calculateDistance(
-      row.d_lat,
-      row.d_lon,
-      row.h_lat,
-      row.h_lon
-    );
-
-    res.json({
+    return res.json({
       request_id: row.request_id,
       blood_group: row.blood_group,
       hospital_name: row.hospital_name,
       created_at: row.created_at,
-      distance_km: distance,
+      distance_km: Number(row.distance.toFixed(2)),
       h_lat: row.h_lat,
       h_lon: row.h_lon
     });
@@ -120,6 +124,10 @@ exports.getEmergencyForHospital = (req, res) => {
       ON d.donor_id = er.accepted_donor_id
     WHERE er.hospital_id = ?
       AND er.hospital_visible = 1
+      AND (
+            er.status != 'pending'
+            OR er.donor_expire_at > NOW()
+          )
     ORDER BY er.created_at DESC
   `;
 
@@ -208,7 +216,7 @@ exports.declineEmergency = (req, res) => {
 };
 
 /* =========================
-   COMPLETE DONATION (Hospital) ✅ FIXED
+   COMPLETE DONATION
 ========================= */
 exports.completeEmergency = (req, res) => {
   const { request_id } = req.body;

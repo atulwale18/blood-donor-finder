@@ -6,7 +6,6 @@ const axios = require("axios");
 ===================== */
 const getLatLngFromCity = async (address, city, district) => {
   try {
-    // Build a more specific query to avoid ambiguity
     const query = address
       ? `${address}, ${city}, ${district}, Maharashtra, India`
       : `${city}, ${district}, Maharashtra, India`;
@@ -16,9 +15,7 @@ const getLatLngFromCity = async (address, city, district) => {
     )}&format=json&limit=1`;
 
     const res = await axios.get(url, {
-      headers: {
-        "User-Agent": "blood-donor-finder"
-      }
+      headers: { "User-Agent": "blood-donor-finder" }
     });
 
     if (res.data && res.data.length > 0) {
@@ -57,11 +54,18 @@ exports.register = async (req, res) => {
 
   email = email.toLowerCase().trim();
 
-  // 👉 Auto-resolve location ONLY if GPS not provided
+  // Auto-resolve ONLY if GPS not provided
   if ((!latitude || !longitude) && (address || city)) {
     const loc = await getLatLngFromCity(address, city, district);
     latitude = loc.latitude;
     longitude = loc.longitude;
+  }
+
+  // 🔴 HARD VALIDATION FOR HOSPITAL
+  if (role === "hospital" && (!latitude || !longitude)) {
+    return res.status(400).json({
+      message: "Hospital location is required to find nearby blood banks"
+    });
   }
 
   const userSql = `
@@ -77,7 +81,7 @@ exports.register = async (req, res) => {
 
     const user_id = userResult.insertId;
 
-    // ===== DONOR REGISTER =====
+    /* ===== DONOR REGISTER ===== */
     if (role === "donor") {
       const donorSql = `
         INSERT INTO donors
@@ -113,7 +117,7 @@ exports.register = async (req, res) => {
       );
     }
 
-    // ===== HOSPITAL REGISTER =====
+    /* ===== HOSPITAL REGISTER ===== */
     if (role === "hospital") {
       const hospitalSql = `
         INSERT INTO hospitals
@@ -127,8 +131,8 @@ exports.register = async (req, res) => {
           user_id,
           name,
           mobile,
-          latitude || null,
-          longitude || null,
+          latitude,
+          longitude,
           address || null,
           city || null,
           district || null
@@ -176,37 +180,41 @@ exports.login = (req, res) => {
     const user = users[0];
 
     if (user.role === "donor") {
-      const donorSql = `SELECT donor_id FROM donors WHERE user_id = ?`;
+      return db.query(
+        `SELECT donor_id FROM donors WHERE user_id = ?`,
+        [user.user_id],
+        (err, donors) => {
+          if (err || donors.length === 0) {
+            return res.status(404).json({ message: "Donor not found" });
+          }
 
-      return db.query(donorSql, [user.user_id], (err, donors) => {
-        if (err || donors.length === 0) {
-          return res.status(404).json({ message: "Donor not found" });
+          return res.json({
+            message: "Login success",
+            role: "donor",
+            user_id: user.user_id,
+            donor_id: donors[0].donor_id
+          });
         }
-
-        return res.json({
-          message: "Login success",
-          role: "donor",
-          user_id: user.user_id,
-          donor_id: donors[0].donor_id
-        });
-      });
+      );
     }
 
     if (user.role === "hospital") {
-      const hospitalSql = `SELECT hospital_id FROM hospitals WHERE user_id = ?`;
+      return db.query(
+        `SELECT hospital_id FROM hospitals WHERE user_id = ?`,
+        [user.user_id],
+        (err, hospitals) => {
+          if (err || hospitals.length === 0) {
+            return res.status(404).json({ message: "Hospital not found" });
+          }
 
-      return db.query(hospitalSql, [user.user_id], (err, hospitals) => {
-        if (err || hospitals.length === 0) {
-          return res.status(404).json({ message: "Hospital not found" });
+          return res.json({
+            message: "Login success",
+            role: "hospital",
+            user_id: user.user_id,
+            hospital_id: hospitals[0].hospital_id
+          });
         }
-
-        return res.json({
-          message: "Login success",
-          role: "hospital",
-          user_id: user.user_id,
-          hospital_id: hospitals[0].hospital_id
-        });
-      });
+      );
     }
 
     if (user.role === "admin") {

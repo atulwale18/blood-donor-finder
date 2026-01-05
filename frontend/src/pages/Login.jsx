@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -8,9 +8,36 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  /* ===== CAPTCHA STATE (ALPHANUMERIC) ===== */
+  const [captcha, setCaptcha] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
+
+  /* ===== GENERATE ALPHANUMERIC CAPTCHA ===== */
+  const generateCaptcha = () => {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setCaptcha(result);
+    setCaptchaInput("");
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
       alert("Please enter email and password");
+      return;
+    }
+
+    /* ===== CAPTCHA VALIDATION ===== */
+    if (captcha !== captchaInput) {
+      alert("Invalid CAPTCHA");
+      generateCaptcha();
       return;
     }
 
@@ -24,15 +51,15 @@ const Login = () => {
       localStorage.setItem("role", res.data.role);
 
       if (res.data.role === "admin") {
-         navigate("/admin-dashboard");
+        navigate("/admin-dashboard");
       } else if (res.data.role === "hospital") {
-                navigate("/hospital-dashboard");
+        navigate("/hospital-dashboard");
       } else {
-              navigate("/donor-dashboard");
+        navigate("/donor-dashboard");
       }
-
     } catch {
       alert("Invalid credentials");
+      generateCaptcha();
     }
   };
 
@@ -58,6 +85,35 @@ const Login = () => {
           style={styles.input}
         />
 
+        {/* ===== CAPTCHA UI ===== */}
+        <div style={{ display: "flex", gap: 10 }}>
+          <input
+            value={captcha}
+            readOnly
+            style={{
+              ...styles.input,
+              width: "65%",
+              textAlign: "center",
+              fontWeight: "bold",
+              letterSpacing: 2
+            }}
+          />
+          <button
+            type="button"
+            onClick={generateCaptcha}
+            style={{ ...styles.btn, width: "35%", padding: 10 }}
+          >
+            🔄
+          </button>
+        </div>
+
+        <input
+          placeholder="Enter CAPTCHA"
+          value={captchaInput}
+          onChange={(e) => setCaptchaInput(e.target.value)}
+          style={styles.input}
+        />
+
         <button style={styles.btn} onClick={handleLogin}>
           Login
         </button>
@@ -70,7 +126,6 @@ const Login = () => {
         </p>
       </div>
 
-      {/* Animation CSS */}
       <style>{animationCSS}</style>
     </div>
   );
@@ -134,7 +189,7 @@ const styles = {
   }
 };
 
-/* ================= 3D & ANIMATION ================= */
+/* ================= ANIMATION ================= */
 
 const animationCSS = `
 .card3d {

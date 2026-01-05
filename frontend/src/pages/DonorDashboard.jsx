@@ -9,7 +9,7 @@ const DonorDashboard = () => {
   const [donor, setDonor] = useState(null);
   const [available, setAvailable] = useState(true);
   const [emergency, setEmergency] = useState(null);
-  const [accepted, setAccepted] = useState(false); // ✅ NEW STATE
+  const [accepted, setAccepted] = useState(false);
 
   /* =========================
      FETCH EMERGENCY
@@ -20,7 +20,7 @@ const DonorDashboard = () => {
       .then((res) => {
         if (res.data) {
           setEmergency(res.data);
-          setAccepted(false); // reset on new request
+          setAccepted(false);
         } else {
           setEmergency(null);
           setAccepted(false);
@@ -42,7 +42,8 @@ const DonorDashboard = () => {
     }
 
     axios
-      .get(`http://localhost:5000/api/profile/donor/${userId}`)
+      // ✅ FIX 1: correct donor profile API
+      .get(`http://localhost:5000/api/donor/profile/${userId}`)
       .then((res) => {
         setDonor(res.data);
         fetchEmergency();
@@ -63,17 +64,18 @@ const DonorDashboard = () => {
      ACCEPT EMERGENCY
   ========================= */
   const handleAccept = () => {
-    if (!emergency) return;
+    if (!emergency || !donor) return;
 
     axios
       .post("http://localhost:5000/api/emergency/accept", {
         request_id: emergency.request_id,
-        donor_id: userId
+        // ✅ FIX 2: send donor_id, not user_id
+        donor_id: donor.donor_id
       })
       .then(() => {
         alert("Emergency request accepted 🙏");
         setAvailable(false);
-        setAccepted(true); // ✅ keep emergency data
+        setAccepted(true);
       })
       .catch(() => alert("Failed to accept request"));
   };
@@ -127,7 +129,6 @@ const DonorDashboard = () => {
             <p><b>Distance:</b> {emergency.distance_km} km</p>
             <p><b>Requested:</b> {emergency.created_at}</p>
 
-            {/* ACCEPT / DECLINE */}
             {!accepted && (
               <div style={styles.emergencyBtns}>
                 <button style={styles.acceptBtn} onClick={handleAccept}>
@@ -139,7 +140,6 @@ const DonorDashboard = () => {
               </div>
             )}
 
-            {/* MAP AFTER ACCEPT */}
             {accepted && (
               <button style={styles.mapBtn} onClick={openMap}>
                 📍 Open Hospital Location

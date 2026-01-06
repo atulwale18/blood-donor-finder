@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const MAX_DISTANCE_KM = 15;
+
 const HospitalDashboard = () => {
   const navigate = useNavigate();
   const userId = localStorage.getItem("user_id");
@@ -26,7 +28,6 @@ const HospitalDashboard = () => {
       .then((res) => {
         setHospital(res.data);
 
-        // 🔴 KEEP BLOOD BANK LOGIC (as you asked)
         return axios.get("http://localhost:5000/api/bloodbank/nearby", {
           params: {
             latitude: res.data.latitude,
@@ -144,24 +145,66 @@ const HospitalDashboard = () => {
           </button>
         </div>
 
-        {/* NEARBY BLOOD BANKS (RESTORED) */}
+        {/* 🏦 NEARBY BLOOD BANKS */}
         <div style={styles.section}>
           <h4>🏦 Nearby Blood Banks</h4>
 
           {bloodBanks.length === 0 ? (
-            <p style={styles.muted}>No blood banks nearby</p>
+            <p style={styles.warning}>
+              No blood banks within {MAX_DISTANCE_KM} km of your location
+            </p>
           ) : (
-            bloodBanks.map((b) => (
-              <div key={b.bloodbank_id} style={styles.box}>
-                <p><b>{b.name}</b></p>
-                <p>📍 {b.address}, {b.city}</p>
-                <p>📞 {b.mobile}</p>
-              </div>
-            ))
+            bloodBanks.map((b, index) => {
+              const isNearest = index === 0;
+
+              return (
+                <div
+                  key={b.bloodbank_id}
+                  style={{
+                    ...styles.bloodBankCard,
+                    border: isNearest
+                      ? "2px solid #2e7d32"
+                      : "1px solid #ddd"
+                  }}
+                >
+                  <div>
+                    <b>
+                      {b.name}
+                      {isNearest && (
+                        <span style={styles.nearestBadge}> NEAREST</span>
+                      )}
+                    </b>
+
+                    <p style={styles.muted}>
+                      📍 {b.address}, {b.city}
+                    </p>
+
+                    <p style={styles.distance}>
+                      📏 {(b.distance_km ?? b.distance)?.toFixed?.(2) ?? "N/A"} km away
+                    </p>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <a href={`tel:${b.mobile}`} style={styles.callBtn}>
+                      📞 Call
+                    </a>
+
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${b.latitude},${b.longitude}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={styles.mapBtn}
+                    >
+                      🗺️ Map
+                    </a>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
 
-        {/* EMERGENCY STATUS */}
+        {/* EMERGENCY REQUESTS */}
         <div style={styles.section}>
           <h4>📌 Emergency Requests</h4>
 
@@ -169,9 +212,20 @@ const HospitalDashboard = () => {
             <p style={styles.muted}>No emergency requests</p>
           ) : (
             emergencies.map((e) => (
-              <div key={e.request_id} style={styles.emergencyCard}>
+              <div
+                key={e.request_id}
+                className="emergencyCard"
+                style={{
+                  ...styles.emergencyCard,
+                  animation: "slideUp 0.4s ease"
+                }}
+              >
                 <div style={styles.rowBetween}>
-                  <p><b>Blood Group:</b> {e.blood_group}</p>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <span style={styles.dropIcon}>🩸</span>
+                    <b>Emergency Request</b>
+                  </div>
+
                   <span
                     style={{
                       ...styles.statusBadge,
@@ -184,6 +238,8 @@ const HospitalDashboard = () => {
                     {e.status}
                   </span>
                 </div>
+
+                <div style={styles.bloodGroupCircle}>{e.blood_group}</div>
 
                 {e.status === "pending" && (
                   <>
@@ -202,7 +258,7 @@ const HospitalDashboard = () => {
                       <div key={i} style={styles.donorCard}>
                         <p><b>👤 {d.name}</b></p>
                         <p>📞 {d.mobile}</p>
-                        <p>📍 {d.distance_km} km</p>
+                        <p>📍 {(d.distance_km ?? d.distance)?.toFixed?.(2)} km</p>
                       </div>
                     ))}
                   </>
@@ -253,7 +309,7 @@ const styles = {
     alignItems: "center"
   },
   card: {
-    width: 440,
+    width: 480,
     background: "#fff",
     padding: 25,
     borderRadius: 18,
@@ -282,11 +338,70 @@ const styles = {
     border: "none",
     borderRadius: 8
   },
+  bloodBankCard: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    borderRadius: 10,
+    background: "#f9f9f9",
+    marginBottom: 10
+  },
+  nearestBadge: {
+    marginLeft: 6,
+    fontSize: 10,
+    background: "#2e7d32",
+    color: "#fff",
+    padding: "2px 6px",
+    borderRadius: 6
+  },
+  callBtn: {
+    background: "#2e7d32",
+    color: "#fff",
+    padding: "6px 12px",
+    borderRadius: 6,
+    textDecoration: "none",
+    fontSize: 14
+  },
+  mapBtn: {
+    background: "#1565c0",
+    color: "#fff",
+    padding: "6px 12px",
+    borderRadius: 6,
+    textDecoration: "none",
+    fontSize: 14
+  },
+  distance: {
+    fontSize: 12,
+    color: "#555",
+    marginTop: 4
+  },
+  warning: {
+    color: "#b71c1c",
+    background: "#fdecea",
+    padding: 10,
+    borderRadius: 8,
+    fontSize: 13
+  },
   emergencyCard: {
-    border: "1px solid #e0e0e0",
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 14
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    background: "linear-gradient(145deg, #ffffff, #f4f6f8)",
+    boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+    transition: "0.3s"
+  },
+  bloodGroupCircle: {
+    width: 55,
+    height: 55,
+    borderRadius: "50%",
+    background: "linear-gradient(135deg, #e53935, #d32f2f)",
+    color: "#fff",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    fontWeight: "bold",
+    margin: "10px auto"
   },
   rowBetween: {
     display: "flex",
@@ -313,12 +428,6 @@ const styles = {
     padding: 10,
     borderRadius: 8
   },
-  box: {
-    border: "1px solid #ddd",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 8
-  },
   completeBtn: {
     marginTop: 10,
     width: "100%",
@@ -343,15 +452,24 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     color: "#fff"
-  }
+  },
+  dropIcon: { fontSize: 20 }
 };
 
 const animationCSS = `
 .fadeIn {
   animation: fadeIn 0.6s ease-in-out;
 }
+.emergencyCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+}
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 `;

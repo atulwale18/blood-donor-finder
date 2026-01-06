@@ -32,7 +32,7 @@ const getLatLngFromCity = async (address, city, district) => {
 };
 
 /* =====================
-   REGISTER
+   REGISTER (UNCHANGED)
 ===================== */
 exports.register = async (req, res) => {
   let {
@@ -61,7 +61,7 @@ exports.register = async (req, res) => {
     longitude = loc.longitude;
   }
 
-  // 🔴 HARD VALIDATION FOR HOSPITAL
+  // HARD VALIDATION FOR HOSPITAL
   if (role === "hospital" && (!latitude || !longitude)) {
     return res.status(400).json({
       message: "Hospital location is required to find nearby blood banks"
@@ -126,7 +126,6 @@ exports.register = async (req, res) => {
       `;
 
       return db.query(
-        hospitalSql,
         [
           user_id,
           name,
@@ -153,21 +152,25 @@ exports.register = async (req, res) => {
 };
 
 /* =====================
-   LOGIN (UNCHANGED)
+   LOGIN (FIXED)
 ===================== */
 exports.login = (req, res) => {
   let { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password required" });
+  }
 
   email = email.toLowerCase().trim();
   password = password.trim();
 
   const userSql = `
-    SELECT user_id, role
+    SELECT user_id, role, password
     FROM users
-    WHERE email = ? AND password = ?
+    WHERE email = ?
   `;
 
-  db.query(userSql, [email, password], (err, users) => {
+  db.query(userSql, [email], (err, users) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: "Server error" });
@@ -179,6 +182,12 @@ exports.login = (req, res) => {
 
     const user = users[0];
 
+    // PASSWORD CHECK (FIX)
+    if (user.password !== password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    /* ===== DONOR LOGIN ===== */
     if (user.role === "donor") {
       return db.query(
         `SELECT donor_id FROM donors WHERE user_id = ?`,
@@ -198,6 +207,7 @@ exports.login = (req, res) => {
       );
     }
 
+    /* ===== HOSPITAL LOGIN ===== */
     if (user.role === "hospital") {
       return db.query(
         `SELECT hospital_id FROM hospitals WHERE user_id = ?`,
@@ -217,6 +227,7 @@ exports.login = (req, res) => {
       );
     }
 
+    /* ===== ADMIN LOGIN ===== */
     if (user.role === "admin") {
       return res.json({
         message: "Login success",
@@ -224,5 +235,7 @@ exports.login = (req, res) => {
         user_id: user.user_id
       });
     }
+
+    return res.status(401).json({ message: "Invalid credentials" });
   });
 };

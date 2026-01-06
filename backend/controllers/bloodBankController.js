@@ -5,17 +5,19 @@ const db = require("../config/db");
    KNN + 15 KM EMERGENCY RANGE
 ========================= */
 exports.getNearbyBloodBanks = (req, res) => {
-  const { latitude, longitude } = req.query;
+  let { latitude, longitude } = req.query;
 
-  // Safety check
   if (!latitude || !longitude) {
     return res.status(400).json({
       message: "Hospital location is required to find nearby blood banks"
     });
   }
 
-  const K = 5; // Top 5 nearest blood banks
-  const MAX_DISTANCE = 15; // 15 KM emergency radius
+  latitude = Number(latitude);
+  longitude = Number(longitude);
+
+  const K = 5;              // Top 5 nearest
+  const MAX_DISTANCE = 15;  // 15 km radius
 
   const sql = `
     SELECT
@@ -28,16 +30,26 @@ exports.getNearbyBloodBanks = (req, res) => {
       longitude,
       (
         6371 * acos(
-          cos(radians(?)) * cos(radians(latitude)) *
-          cos(radians(longitude) - radians(?)) +
-          sin(radians(?)) * sin(radians(latitude))
+          LEAST(
+            1,
+            GREATEST(
+              -1,
+              cos(radians(?)) *
+              cos(radians(CAST(latitude AS DECIMAL(10,6)))) *
+              cos(
+                radians(CAST(longitude AS DECIMAL(10,6))) - radians(?)
+              ) +
+              sin(radians(?)) *
+              sin(radians(CAST(latitude AS DECIMAL(10,6))))
+            )
+          )
         )
-      ) AS distance
+      ) AS distance_km
     FROM blood_banks
     WHERE latitude IS NOT NULL
       AND longitude IS NOT NULL
-    HAVING distance <= ?
-    ORDER BY distance ASC
+    HAVING distance_km <= ?
+    ORDER BY distance_km ASC
     LIMIT ?
   `;
 

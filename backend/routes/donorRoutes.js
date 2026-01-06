@@ -4,8 +4,11 @@ const router = express.Router();
 const {
   getDonorProfile,
   findDonors,
-  getNearestDonors
+  getNearestDonors,
+  uploadProfilePhoto   // ✅ ADD THIS
 } = require("../controllers/donorController");
+
+const uploadDonorPhoto = require("../middleware/donorUpload"); // ✅ ADD THIS
 
 /* =========================
    GET DONOR PROFILE
@@ -25,5 +28,18 @@ router.post("/find", findDonors);
    /api/donor/nearest?blood_group=O+&latitude=16.85&longitude=74.58
 ========================= */
 router.get("/nearest", getNearestDonors);
+
+/* =========================
+   UPLOAD DONOR PROFILE PHOTO
+   Supports:
+   - Live camera selfie
+   - Gallery upload
+   POST /api/donor/upload-photo/:donorId
+========================= */
+router.post(
+  "/upload-photo/:donorId",
+  uploadDonorPhoto.single("profile_pic"),
+  uploadProfilePhoto
+);
 
 module.exports = router;

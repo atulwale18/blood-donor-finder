@@ -148,3 +148,41 @@ exports.getNearestDonors = (req, res) => {
     }
   );
 };
+
+/* =========================
+   UPLOAD DONOR PROFILE PHOTO
+   Supports:
+   - Live camera selfie
+   - Gallery upload
+========================= */
+exports.uploadProfilePhoto = (req, res) => {
+  const { donorId } = req.params;
+
+  if (!req.file) {
+    return res.status(400).json({
+      message: "No image uploaded"
+    });
+  }
+
+  const imagePath = req.file.path;
+
+  const sql = `
+    UPDATE donors
+    SET profile_pic = ?
+    WHERE donor_id = ?
+  `;
+
+  db.query(sql, [imagePath, donorId], (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Failed to update profile photo"
+      });
+    }
+
+    return res.json({
+      message: "Profile photo updated successfully",
+      profile_pic: imagePath
+    });
+  });
+};

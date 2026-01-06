@@ -1,4 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useRef
+} from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -11,8 +16,15 @@ const DonorDashboard = () => {
   const [emergency, setEmergency] = useState(null);
   const [accepted, setAccepted] = useState(false);
 
+  /* ===== PROFILE PHOTO STATES ===== */
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const [cameraOn, setCameraOn] = useState(false);
+
   /* =========================
-     FETCH EMERGENCY (LIVE)
+     FETCH EMERGENCY
   ========================= */
   const fetchEmergency = useCallback(() => {
     if (!userId) return;
@@ -20,21 +32,14 @@ const DonorDashboard = () => {
     axios
       .get(`http://localhost:5000/api/emergency/donor/${userId}`)
       .then((res) => {
-        if (res.data) {
-          setEmergency(res.data);
-        } else {
-          setEmergency(null);
-          setAccepted(false);
-        }
-      })
-      .catch(() => {
-        setEmergency(null);
+        setEmergency(res.data || null);
         setAccepted(false);
-      });
+      })
+      .catch(() => setEmergency(null));
   }, [userId]);
 
   /* =========================
-     LOAD DONOR PROFILE (FIXED)
+     LOAD DONOR PROFILE
   ========================= */
   useEffect(() => {
     if (!userId) {
@@ -43,7 +48,7 @@ const DonorDashboard = () => {
     }
 
     axios
-      .get(`http://localhost:5000/api/profile/donor/${userId}`)
+      .get(`http://localhost:5000/api/donor/profile/${userId}`)
       .then((res) => {
         setDonor(res.data);
         fetchEmergency();
@@ -52,18 +57,59 @@ const DonorDashboard = () => {
   }, [userId, navigate, fetchEmergency]);
 
   /* =========================
-     POLLING (IMPORTANT)
+     POLLING
   ========================= */
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchEmergency();
-    }, 5000);
-
+    const interval = setInterval(fetchEmergency, 5000);
     return () => clearInterval(interval);
   }, [fetchEmergency]);
 
   /* =========================
-     OPEN MAP
+     CAMERA FUNCTIONS
+  ========================= */
+  const startCamera = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    streamRef.current = stream;
+    videoRef.current.srcObject = stream;
+    setCameraOn(true);
+  };
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraOn(false);
+  };
+
+  const capturePhoto = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+
+    canvas.toBlob((blob) => {
+      uploadPhoto(new File([blob], "selfie.jpg", { type: "image/jpeg" }));
+      stopCamera();
+    });
+  };
+
+  const uploadPhoto = async (file) => {
+    const fd = new FormData();
+    fd.append("profile_pic", file);
+
+    await axios.post(
+      `http://localhost:5000/api/donor/upload-photo/${donor.donor_id}`,
+      fd,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    alert("Profile photo updated");
+    window.location.reload();
+  };
+
+  /* =========================
+     MAP
   ========================= */
   const openMap = () => {
     if (!emergency?.h_lat || !emergency?.h_lon) return;
@@ -73,86 +119,67 @@ const DonorDashboard = () => {
     );
   };
 
-  /* =========================
-     ACCEPT EMERGENCY
-  ========================= */
-  const handleAccept = () => {
-    if (!emergency || !donor) return;
-
-    axios
-      .post("http://localhost:5000/api/emergency/accept", {
-        request_id: emergency.request_id,
-        donor_id: donor.donor_id
-      })
-      .then(() => {
-        alert("Emergency request accepted 🙏");
-        setAvailable(false);
-        setAccepted(true);
-      })
-      .catch(() => alert("Failed to accept request"));
-  };
-
-  /* =========================
-     DECLINE EMERGENCY
-  ========================= */
-  const handleDecline = () => {
-    if (!emergency) return;
-
-    axios
-      .post("http://localhost:5000/api/emergency/decline", {
-        request_id: emergency.request_id
-      })
-      .then(() => {
-        alert("Request declined");
-        setEmergency(null);
-        setAccepted(false);
-      })
-      .catch(() => alert("Failed to decline request"));
-  };
-
   if (!donor) {
     return <div style={styles.loading}>Loading...</div>;
   }
 
+  const profileImg = donor.profile_pic
+    ? `http://localhost:5000/${donor.profile_pic}`
+    : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
   return (
     <div style={styles.page}>
-      <div style={styles.card} className="fadeIn">
+      <div style={styles.card}>
         <h2 style={styles.title}>🩸 Donor Dashboard</h2>
 
         {/* PROFILE */}
         <div style={styles.profile}>
-          <div style={styles.avatar}>
-            {donor.name.charAt(0).toUpperCase()}
-          </div>
+          <img
+            src={profileImg}
+            alt="profile"
+            style={styles.avatar}
+            onClick={() => setShowPhotoModal(true)}
+          />
           <div>
             <h3>{donor.name}</h3>
             <p style={{ color: "#666" }}>
-              {donor.email || "Registered Donor"}
+              {available ? "Available to donate" : "Not available"}
             </p>
           </div>
         </div>
 
-        {/* EMERGENCY CARD */}
+        {/* INFO GRID (OLD DASHBOARD STYLE) */}
+        <div style={styles.grid}>
+          <div style={styles.box}><p>Blood Group</p><b>{donor.blood_group}</b></div>
+          <div style={styles.box}><p>Mobile</p><b>{donor.mobile}</b></div>
+          <div style={styles.box}><p>Gender</p><b>{donor.gender}</b></div>
+          <div style={styles.box}>
+            <p>Last Donation</p>
+            <b>{donor.last_donation_date || "Not yet"}</b>
+          </div>
+        </div>
+
+        {/* AVAILABILITY */}
+        <div style={styles.btnRow}>
+          <button style={styles.availableBtn} onClick={() => setAvailable(true)}>
+            ✔ Available to Donate
+          </button>
+          <button style={styles.notAvailableBtn} onClick={() => setAvailable(false)}>
+            ✖ Not Available
+          </button>
+        </div>
+
+        {/* EMERGENCY */}
         {emergency && (
           <div style={styles.emergencyCard}>
-            <h3 style={styles.emergencyTitle}>🚨 Emergency Blood Request</h3>
+            <h3>🚨 Emergency Blood Request</h3>
             <p><b>Blood Group:</b> {emergency.blood_group}</p>
             <p><b>Hospital:</b> {emergency.hospital_name}</p>
             <p><b>Distance:</b> {emergency.distance_km} km</p>
-            <p><b>Requested:</b> {emergency.created_at}</p>
 
-            {!accepted && (
-              <div style={styles.emergencyBtns}>
-                <button style={styles.acceptBtn} onClick={handleAccept}>
-                  Accept
-                </button>
-                <button style={styles.declineBtn} onClick={handleDecline}>
-                  Decline
-                </button>
-              </div>
-            )}
-
-            {accepted && (
+            {!accepted ? (
+              <button style={styles.availableBtn}>Accept</button>
+            ) : (
               <button style={styles.mapBtn} onClick={openMap}>
                 📍 Open Hospital Location
               </button>
@@ -160,52 +187,10 @@ const DonorDashboard = () => {
           </div>
         )}
 
-        {/* INFO GRID */}
-        <div style={styles.grid}>
-          <div style={styles.box}>
-            <p className="label">Blood Group</p>
-            <h4>{donor.blood_group}</h4>
-          </div>
-          <div style={styles.box}>
-            <p className="label">Mobile</p>
-            <h4>{donor.mobile}</h4>
-          </div>
-          <div style={styles.box}>
-            <p className="label">Gender</p>
-            <h4>{donor.gender}</h4>
-          </div>
-          <div style={styles.box}>
-            <p className="label">Last Donation</p>
-            <h4>{donor.last_donation_date || "Not yet"}</h4>
-          </div>
-        </div>
-
-        {/* AVAILABILITY */}
-        <div style={styles.btnRow}>
-          <button
-            style={{
-              ...styles.availBtn,
-              background: available ? "#2e7d32" : "#ccc"
-            }}
-            onClick={() => setAvailable(true)}
-          >
-            ✔ Available to Donate
-          </button>
-
-          <button
-            style={{
-              ...styles.notAvailBtn,
-              background: !available ? "#000" : "#ccc"
-            }}
-            onClick={() => setAvailable(false)}
-          >
-            ✖ Not Available
-          </button>
-        </div>
-
         <button
           style={styles.logout}
           onClick={() => {
+            stopCamera();
             localStorage.clear();
             navigate("/");
           }}
@@ -214,7 +199,35 @@ const DonorDashboard = () => {
         </button>
       </div>
 
-      <style>{animationCSS}</style>
+      {/* PROFILE PHOTO MODAL */}
+      {showPhotoModal && (
+        <div style={styles.modal} onClick={() => setShowPhotoModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <img src={profileImg} alt="preview" style={styles.previewImg} />
+
+            <button style={styles.availableBtn} onClick={startCamera}>
+              📸 Take Selfie
+            </button>
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => uploadPhoto(e.target.files[0])}
+              style={{ marginTop: 10 }}
+            />
+
+            {cameraOn && (
+              <>
+                <video ref={videoRef} autoPlay style={{ width: "100%", marginTop: 10 }} />
+                <canvas ref={canvasRef} style={{ display: "none" }} />
+                <button style={styles.availableBtn} onClick={capturePhoto}>
+                  Capture Photo
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -230,108 +243,85 @@ const styles = {
     alignItems: "center"
   },
   card: {
-    width: 380,
+    width: 420,
     background: "#fff",
     padding: 25,
     borderRadius: 16,
     boxShadow: "0 15px 40px rgba(0,0,0,0.25)"
   },
   title: { textAlign: "center", marginBottom: 20 },
-  profile: {
-    display: "flex",
-    gap: 15,
-    alignItems: "center",
-    marginBottom: 20
-  },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: "50%",
-    background: "#c62828",
-    color: "#fff",
-    fontSize: 26,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  emergencyCard: {
-    background: "#fff3f3",
-    border: "1px solid #ffcdd2",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20
-  },
-  emergencyTitle: { color: "#c62828", marginBottom: 10 },
-  emergencyBtns: { display: "flex", gap: 10, marginTop: 10 },
-  acceptBtn: {
-    flex: 1,
-    padding: 8,
-    background: "#2e7d32",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer"
-  },
-  declineBtn: {
-    flex: 1,
-    padding: 8,
-    background: "#b71c1c",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer"
-  },
-  mapBtn: {
-    marginTop: 10,
-    width: "100%",
-    padding: 8,
-    background: "#1976d2",
-    color: "#fff",
-    border: "none",
-    borderRadius: 6,
-    cursor: "pointer"
-  },
+  profile: { display: "flex", gap: 15, alignItems: "center", marginBottom: 15 },
+  avatar: { width: 60, height: 60, borderRadius: "50%", cursor: "pointer" },
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: 12,
-    marginBottom: 20
+    marginBottom: 15
   },
   box: { background: "#f5f5f5", padding: 12, borderRadius: 10 },
   btnRow: { display: "flex", gap: 10, marginBottom: 15 },
-  availBtn: { flex: 1, padding: 10, border: "none", borderRadius: 8, color: "#fff" },
-  notAvailBtn: { flex: 1, padding: 10, border: "none", borderRadius: 8, color: "#fff" },
-  logout: {
-    width: "100%",
-    padding: 10,
-    background: "#d32f2f",
+  availableBtn: {
+    flex: 1,
+    background: "#2e7d32",
     color: "#fff",
+    padding: 10,
+    border: "none",
+    borderRadius: 8
+  },
+  notAvailableBtn: {
+    flex: 1,
+    background: "#000",
+    color: "#fff",
+    padding: 10,
+    border: "none",
+    borderRadius: 8
+  },
+  emergencyCard: {
+    background: "#fff3f3",
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15
+  },
+  mapBtn: {
+    background: "#1976d2",
+    color: "#fff",
+    padding: 10,
     border: "none",
     borderRadius: 8,
-    cursor: "pointer"
+    width: "100%"
   },
-  loading: {
-    minHeight: "100vh",
+  logout: {
+    width: "100%",
+    background: "#d32f2f",
+    color: "#fff",
+    padding: 10,
+    border: "none",
+    borderRadius: 8
+  },
+  loading: { color: "#fff" },
+
+  /* MODAL */
+  modal: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.7)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    fontSize: 20,
-    color: "#fff"
+    zIndex: 1000
+  },
+  modalContent: {
+    background: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    width: 300,
+    textAlign: "center"
+  },
+  previewImg: {
+    width: "100%",
+    borderRadius: 10,
+    marginBottom: 10
   }
 };
-
-const animationCSS = `
-.fadeIn {
-  animation: fadeIn 0.7s ease-in-out;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-.label {
-  font-size: 12px;
-  color: #777;
-}
-`;
 
 export default DonorDashboard;

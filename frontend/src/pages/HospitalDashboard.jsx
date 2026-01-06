@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -7,11 +7,14 @@ const HospitalDashboard = () => {
   const userId = localStorage.getItem("user_id");
 
   const [hospital, setHospital] = useState(null);
-  const [bloodBanks, setBloodBanks] = useState([]);
   const [bloodGroup, setBloodGroup] = useState("O+");
   const [emergencies, setEmergencies] = useState([]);
-  const [nearestDonors, setNearestDonors] = useState([]); // ✅ NEW
+  const [notifiedDonors, setNotifiedDonors] = useState({});
+  const [bloodBanks, setBloodBanks] = useState([]);
 
+  /* =====================
+     LOAD HOSPITAL PROFILE
+  ===================== */
   useEffect(() => {
     if (!userId) {
       navigate("/");
@@ -23,6 +26,7 @@ const HospitalDashboard = () => {
       .then((res) => {
         setHospital(res.data);
 
+        // 🔴 KEEP BLOOD BANK LOGIC (as you asked)
         return axios.get("http://localhost:5000/api/bloodbank/nearby", {
           params: {
             latitude: res.data.latitude,
@@ -30,36 +34,14 @@ const HospitalDashboard = () => {
           }
         });
       })
-      .then((res) => {
-        setBloodBanks(res.data || []);
-      })
-      .catch(() => {
-        alert("Failed to load hospital data");
-      });
+      .then((res) => setBloodBanks(res.data || []))
+      .catch(() => alert("Failed to load hospital data"));
   }, [userId, navigate]);
-
-  /* =====================
-     FETCH NEAREST DONORS (KNN)
-  ===================== */
-  const fetchNearestDonors = (bg = bloodGroup) => {
-    if (!hospital) return;
-
-    axios
-      .get("http://localhost:5000/api/donor/nearest", {
-        params: {
-          blood_group: bg,
-          latitude: hospital.latitude,
-          longitude: hospital.longitude
-        }
-      })
-      .then((res) => setNearestDonors(res.data || []))
-      .catch(() => {});
-  };
 
   /* =====================
      FETCH EMERGENCIES
   ===================== */
-  const fetchEmergencies = () => {
+  const fetchEmergencies = useCallback(() => {
     if (!hospital) return;
 
     axios
@@ -68,14 +50,26 @@ const HospitalDashboard = () => {
       )
       .then((res) => setEmergencies(res.data || []))
       .catch(() => {});
-  };
+  }, [hospital]);
 
   useEffect(() => {
-    if (hospital) {
-      fetchEmergencies();
-      fetchNearestDonors();
-    }
-  }, [hospital]);
+    if (hospital) fetchEmergencies();
+  }, [hospital, fetchEmergencies]);
+
+  /* =====================
+     FETCH NOTIFIED DONORS
+  ===================== */
+  const fetchNotifiedDonors = (requestId) => {
+    axios
+      .get(`http://localhost:5000/api/emergency/notified/${requestId}`)
+      .then((res) =>
+        setNotifiedDonors((prev) => ({
+          ...prev,
+          [requestId]: res.data || []
+        }))
+      )
+      .catch(() => {});
+  };
 
   /* =====================
      SEND EMERGENCY
@@ -87,9 +81,8 @@ const HospitalDashboard = () => {
         blood_group: bloodGroup
       });
 
-      alert("Emergency request sent to nearby donors 🚨");
+      alert("Emergency request sent 🚨");
       fetchEmergencies();
-      fetchNearestDonors(bloodGroup); // ✅ refresh KNN donors
     } catch {
       alert("Failed to send emergency request");
     }
@@ -104,40 +97,10 @@ const HospitalDashboard = () => {
         request_id
       });
 
-      alert("Donation marked as completed ✅");
+      alert("Donation completed ✅");
       fetchEmergencies();
     } catch {
       alert("Failed to complete donation");
-    }
-  };
-
-  /* =====================
-     EMERGENCY BLOOD CHECK
-  ===================== */
-  const emergencyBloodCheck = async () => {
-    try {
-      const res = await axios.get(
-        "http://localhost:5000/api/bloodbank/emergency",
-        {
-          params: {
-            blood_group: encodeURIComponent(bloodGroup),
-            latitude: hospital.latitude,
-            longitude: hospital.longitude
-          }
-        }
-      );
-
-      if (res.data.length === 0) {
-        alert("Required blood group not available");
-        return;
-      }
-
-      const bank = res.data[0];
-      alert(
-        `Blood Available!\n\nBlood Bank: ${bank.name}\nUnits: ${bank.units_available}\nPhone: ${bank.mobile}`
-      );
-    } catch {
-      alert("Failed to check emergency blood availability");
     }
   };
 
@@ -167,11 +130,8 @@ const HospitalDashboard = () => {
 
           <select
             value={bloodGroup}
-            onChange={(e) => {
-              setBloodGroup(e.target.value);
-              fetchNearestDonors(e.target.value); // ✅ update donors on change
-            }}
-            style={{ width: "100%", padding: 10, marginBottom: 10 }}
+            onChange={(e) => setBloodGroup(e.target.value)}
+            style={styles.select}
           >
             <option>O+</option><option>O-</option>
             <option>A+</option><option>A-</option>
@@ -184,25 +144,18 @@ const HospitalDashboard = () => {
           </button>
         </div>
 
+        {/* NEARBY BLOOD BANKS (RESTORED) */}
         <div style={styles.section}>
-          <button style={styles.emergencyBtn} onClick={emergencyBloodCheck}>
-            Emergency Blood Check
-          </button>
-        </div>
+          <h4>🏦 Nearby Blood Banks</h4>
 
-        {/* NEAREST DONORS (KNN) */}
-        <div style={styles.section}>
-          <h4>🧭 Nearest Eligible Donors (15 km)</h4>
-
-          {nearestDonors.length === 0 ? (
-            <p>No eligible donors nearby</p>
+          {bloodBanks.length === 0 ? (
+            <p style={styles.muted}>No blood banks nearby</p>
           ) : (
-            nearestDonors.map((d) => (
-              <div key={d.donor_id} style={styles.box}>
-                <p><b>Name:</b> {d.name}</p>
-                <p><b>Blood Group:</b> {d.blood_group}</p>
-                <p><b>Mobile:</b> {d.mobile}</p>
-                <p><b>Distance:</b> {d.distance.toFixed(2)} km</p>
+            bloodBanks.map((b) => (
+              <div key={b.bloodbank_id} style={styles.box}>
+                <p><b>{b.name}</b></p>
+                <p>📍 {b.address}, {b.city}</p>
+                <p>📞 {b.mobile}</p>
               </div>
             ))
           )}
@@ -210,21 +163,55 @@ const HospitalDashboard = () => {
 
         {/* EMERGENCY STATUS */}
         <div style={styles.section}>
-          <h4>📌 Emergency Request Status</h4>
+          <h4>📌 Emergency Requests</h4>
 
           {emergencies.length === 0 ? (
-            <p>No emergency requests</p>
+            <p style={styles.muted}>No emergency requests</p>
           ) : (
             emergencies.map((e) => (
-              <div key={e.request_id} style={styles.box}>
-                <p><b>Blood Group:</b> {e.blood_group}</p>
-                <p><b>Status:</b> {e.status}</p>
+              <div key={e.request_id} style={styles.emergencyCard}>
+                <div style={styles.rowBetween}>
+                  <p><b>Blood Group:</b> {e.blood_group}</p>
+                  <span
+                    style={{
+                      ...styles.statusBadge,
+                      background:
+                        e.status === "pending" ? "#fff3cd" : "#e8f5e9",
+                      color:
+                        e.status === "pending" ? "#856404" : "#2e7d32"
+                    }}
+                  >
+                    {e.status}
+                  </span>
+                </div>
+
+                {e.status === "pending" && (
+                  <>
+                    <button
+                      style={styles.outlineBtn}
+                      onClick={() => fetchNotifiedDonors(e.request_id)}
+                    >
+                      View Notified Donors
+                    </button>
+
+                    {(notifiedDonors[e.request_id] || []).length === 0 && (
+                      <p style={styles.muted}>No donors notified yet</p>
+                    )}
+
+                    {(notifiedDonors[e.request_id] || []).map((d, i) => (
+                      <div key={i} style={styles.donorCard}>
+                        <p><b>👤 {d.name}</b></p>
+                        <p>📞 {d.mobile}</p>
+                        <p>📍 {d.distance_km} km</p>
+                      </div>
+                    ))}
+                  </>
+                )}
 
                 {e.status === "accepted" && (
                   <>
                     <p><b>Donor:</b> {e.donor_name}</p>
                     <p><b>Mobile:</b> {e.donor_mobile}</p>
-                    <p><b>City:</b> {e.donor_city}</p>
 
                     <button
                       style={styles.completeBtn}
@@ -233,10 +220,6 @@ const HospitalDashboard = () => {
                       Mark Donation Completed
                     </button>
                   </>
-                )}
-
-                {e.status === "pending" && (
-                  <p style={{ color: "#777" }}>Waiting for donor…</p>
                 )}
               </div>
             ))
@@ -259,8 +242,7 @@ const HospitalDashboard = () => {
   );
 };
 
-/* ===== STYLES & ANIMATION (UNCHANGED) ===== */
-// ⬇️ everything below remains exactly the same
+/* ================= STYLES ================= */
 
 const styles = {
   page: {
@@ -271,10 +253,11 @@ const styles = {
     alignItems: "center"
   },
   card: {
-    width: 420,
+    width: 440,
     background: "#fff",
     padding: 25,
-    borderRadius: 16
+    borderRadius: 18,
+    boxShadow: "0 15px 40px rgba(0,0,0,0.25)"
   },
   title: { textAlign: "center", marginBottom: 20 },
   profile: { display: "flex", gap: 15, marginBottom: 20 },
@@ -289,7 +272,8 @@ const styles = {
     justifyContent: "center",
     alignItems: "center"
   },
-  section: { marginBottom: 20 },
+  section: { marginBottom: 22 },
+  select: { width: "100%", padding: 10, marginBottom: 10 },
   emergencyBtn: {
     width: "100%",
     padding: 12,
@@ -298,11 +282,42 @@ const styles = {
     border: "none",
     borderRadius: 8
   },
+  emergencyCard: {
+    border: "1px solid #e0e0e0",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14
+  },
+  rowBetween: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center"
+  },
+  statusBadge: {
+    padding: "4px 10px",
+    borderRadius: 12,
+    fontSize: 12,
+    textTransform: "capitalize"
+  },
+  outlineBtn: {
+    marginTop: 10,
+    width: "100%",
+    padding: 8,
+    background: "#f5f5f5",
+    border: "1px solid #ccc",
+    borderRadius: 6
+  },
+  donorCard: {
+    marginTop: 8,
+    background: "#f9f9f9",
+    padding: 10,
+    borderRadius: 8
+  },
   box: {
     border: "1px solid #ddd",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 10
+    marginBottom: 8
   },
   completeBtn: {
     marginTop: 10,
@@ -321,6 +336,7 @@ const styles = {
     border: "none",
     borderRadius: 8
   },
+  muted: { color: "#777" },
   loading: {
     minHeight: "100vh",
     display: "flex",
@@ -332,10 +348,10 @@ const styles = {
 
 const animationCSS = `
 .fadeIn {
-  animation: fadeIn 0.7s ease-in-out;
+  animation: fadeIn 0.6s ease-in-out;
 }
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 `;

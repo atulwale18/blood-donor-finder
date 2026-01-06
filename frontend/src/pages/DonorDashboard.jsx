@@ -12,15 +12,16 @@ const DonorDashboard = () => {
   const [accepted, setAccepted] = useState(false);
 
   /* =========================
-     FETCH EMERGENCY
+     FETCH EMERGENCY (LIVE)
   ========================= */
   const fetchEmergency = useCallback(() => {
+    if (!userId) return;
+
     axios
       .get(`http://localhost:5000/api/emergency/donor/${userId}`)
       .then((res) => {
         if (res.data) {
           setEmergency(res.data);
-          setAccepted(false);
         } else {
           setEmergency(null);
           setAccepted(false);
@@ -33,7 +34,7 @@ const DonorDashboard = () => {
   }, [userId]);
 
   /* =========================
-     LOAD DONOR PROFILE
+     LOAD DONOR PROFILE (FIXED)
   ========================= */
   useEffect(() => {
     if (!userId) {
@@ -42,8 +43,7 @@ const DonorDashboard = () => {
     }
 
     axios
-      // ✅ FIX 1: correct donor profile API
-      .get(`http://localhost:5000/api/donor/profile/${userId}`)
+      .get(`http://localhost:5000/api/profile/donor/${userId}`)
       .then((res) => {
         setDonor(res.data);
         fetchEmergency();
@@ -52,12 +52,25 @@ const DonorDashboard = () => {
   }, [userId, navigate, fetchEmergency]);
 
   /* =========================
+     POLLING (IMPORTANT)
+  ========================= */
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchEmergency();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchEmergency]);
+
+  /* =========================
      OPEN MAP
   ========================= */
   const openMap = () => {
-    if (!emergency || !emergency.h_lat || !emergency.h_lon) return;
-    const url = `https://www.google.com/maps?q=${emergency.h_lat},${emergency.h_lon}`;
-    window.open(url, "_blank");
+    if (!emergency?.h_lat || !emergency?.h_lon) return;
+    window.open(
+      `https://www.google.com/maps?q=${emergency.h_lat},${emergency.h_lon}`,
+      "_blank"
+    );
   };
 
   /* =========================
@@ -69,7 +82,6 @@ const DonorDashboard = () => {
     axios
       .post("http://localhost:5000/api/emergency/accept", {
         request_id: emergency.request_id,
-        // ✅ FIX 2: send donor_id, not user_id
         donor_id: donor.donor_id
       })
       .then(() => {

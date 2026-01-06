@@ -13,7 +13,7 @@ router.post("/create", emergencyController.createEmergency);
 router.get("/donor/:userId", emergencyController.getEmergencyForDonor);
 
 /* =========================
-   GET EMERGENCY FOR HOSPITAL ✅ (THIS WAS MISSING)
+   GET EMERGENCY FOR HOSPITAL
 ========================= */
 router.get(
   "/hospital/:hospitalId",
@@ -21,7 +21,15 @@ router.get(
 );
 
 /* =========================
-   ACCEPT / DECLINE EMERGENCY
+   GET KNN NOTIFIED DONORS (Hospital)
+========================= */
+router.get(
+  "/notified/:requestId",
+  emergencyController.getNotifiedDonorsForHospital
+);
+
+/* =========================
+   ACCEPT / DECLINE / COMPLETE
 ========================= */
 router.post("/accept", emergencyController.acceptEmergency);
 router.post("/decline", emergencyController.declineEmergency);

@@ -4,6 +4,54 @@ const MAX_DISTANCE = 15;   // km
 const MAX_DONORS = 5;
 
 /* =========================
+   ADMIN OVERVIEW (TODAY)
+========================= */
+exports.getAdminOverview = (req, res) => {
+  const sql = `
+    SELECT
+      COUNT(*) AS total_emergencies,
+      SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted_emergencies,
+      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_emergencies
+    FROM emergency_requests
+    WHERE DATE(created_at) = CURDATE()
+  `;
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Admin overview error:", err);
+      return res.status(500).json({ message: "Failed to load admin overview" });
+    }
+    res.json(result[0]);
+  });
+};
+
+/* =========================
+   ADMIN MONTHLY REPORT
+========================= */
+exports.getMonthlyReport = (req, res) => {
+  const sql = `
+  SELECT
+    DATE_FORMAT(created_at, '%Y-%m') AS month_key,
+    DATE_FORMAT(created_at, '%M %Y') AS month,
+    COUNT(*) AS total_emergencies
+  FROM emergency_requests
+  WHERE YEAR(created_at) = YEAR(CURDATE())
+  GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+  ORDER BY month_key
+`;
+
+
+  db.query(sql, (err, result) => {
+    if (err) {
+      console.error("Monthly report error:", err);
+      return res.status(500).json({ message: "Failed to load monthly report" });
+    }
+    res.json(result);
+  });
+};
+
+
+/* =========================
    CREATE EMERGENCY (Hospital)
    + KNN donor selection
 ========================= */

@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const emergencyController = require("../controllers/emergencyController");
 
+router.get("/admin/overview", emergencyController.getAdminOverview);
+router.get("/admin/monthly-report", emergencyController.getMonthlyReport);
+
 /* =========================
    CREATE EMERGENCY (Hospital)
 ========================= */
@@ -34,5 +37,7 @@ router.get(
 router.post("/accept", emergencyController.acceptEmergency);
 router.post("/decline", emergencyController.declineEmergency);
 router.post("/complete", emergencyController.completeEmergency);
+
+
 
 module.exports = router;

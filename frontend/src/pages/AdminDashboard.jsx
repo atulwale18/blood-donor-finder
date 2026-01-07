@@ -13,20 +13,46 @@ const AdminDashboard = () => {
   const [bloodBanks, setBloodBanks] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [requests, setRequests] = useState([]);
-  const [reports, setReports] = useState([]);
+
+  /* ===== OVERVIEW & REPORT ===== */
+  const [overview, setOverview] = useState(null);
+  const [monthlyReport, setMonthlyReport] = useState([]);
 
   /* ===== Create Request ===== */
   const [reqHospital, setReqHospital] = useState("");
   const [reqBlood, setReqBlood] = useState("");
 
-  /* ================= LOAD REAL DATA ================= */
+  /* ================= DATE HELPERS ================= */
+  const formatDateTime = (date) => {
+    if (!date) return "-";
+    return new Date(date).toLocaleString("en-IN");
+  };
+
+  const timeAgo = (date) => {
+    if (!date) return "-";
+    const diff = Math.floor((Date.now() - new Date(date)) / 1000);
+    if (diff < 60) return `${diff} sec ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hrs ago`;
+    return formatDateTime(date);
+  };
+
+  /* ================= LOAD DATA ================= */
   useEffect(() => {
     axios.get("http://localhost:5000/api/admin/donors").then(res => setDonors(res.data));
     axios.get("http://localhost:5000/api/admin/hospitals").then(res => setHospitals(res.data));
     axios.get("http://localhost:5000/api/admin/bloodbanks").then(res => setBloodBanks(res.data));
     axios.get("http://localhost:5000/api/admin/inventory").then(res => setInventory(res.data));
-    axios.get("http://localhost:5000/api/admin/requests").then(res => setRequests(res.data));
-    axios.get("http://localhost:5000/api/admin/reports").then(res => setReports(res.data));
+
+    /* ✅ UPDATED: activity API */
+    axios.get("http://localhost:5000/api/admin/activity")
+      .then(res => setRequests(res.data));
+
+    axios.get("http://localhost:5000/api/emergency/admin/overview")
+      .then(res => setOverview(res.data));
+
+    axios.get("http://localhost:5000/api/emergency/admin/monthly-report")
+      .then(res => setMonthlyReport(res.data));
   }, []);
 
   /* ================= CREATE REQUEST ================= */
@@ -46,7 +72,7 @@ const AdminDashboard = () => {
     });
   };
 
-  /* ================= RENDER CONTENT ================= */
+  /* ================= RENDER ================= */
   const renderSection = () => {
     switch (active) {
 
@@ -54,31 +80,44 @@ const AdminDashboard = () => {
         return (
           <div className="fadeIn">
             <h2 style={styles.title}>👑 Admin Dashboard</h2>
-            <p style={{ color: "#fff", marginBottom: 20 }}>
-              Central control panel for blood management system.
-            </p>
 
-            <div style={styles.activityCard}>
+            <div style={styles.grid}>
+              <div style={styles.glassCard}>
+                <h3>Total Today</h3>
+                <p>{overview?.total_emergencies || 0}</p>
+              </div>
+              <div style={styles.glassCard}>
+                <h3>Accepted</h3>
+                <p>{overview?.accepted_emergencies || 0}</p>
+              </div>
+              <div style={styles.glassCard}>
+                <h3>Completed</h3>
+                <p>{overview?.completed_emergencies || 0}</p>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 25, ...styles.activityCard }}>
               <h3>📌 Hospital Activity</h3>
 
               {requests.length === 0 ? (
-                <p>No recent activity</p>
+                <p>No emergency activity yet</p>
               ) : (
-                requests.slice(0, 5).map((r, i) => (
+                requests.map((r, i) => (
                   <div key={i} style={styles.activityItem}>
                     <p style={styles.activityHospital}>
                       🏥 {r.hospital_name}
                     </p>
 
+                    <p style={{ fontSize: 13 }}>
+                      📞 {r.hospital_mobile}
+                    </p>
+
                     <p style={styles.activityText}>
-                      {r.status === "pending" && "🚨 Emergency request raised for "}
-                      {r.status === "accepted" && "🩸 Request accepted for "}
-                      {r.status === "completed" && "✔ Request completed for "}
-                      <b>{r.blood_group}</b>
+                      🚨 Emergency request raised for <b>{r.blood_group}</b>
                     </p>
 
                     <span style={styles.activityTime}>
-                      ⏰ {new Date(r.created_at).toLocaleString()}
+                      ⏰ {timeAgo(r.created_at)}
                     </span>
                   </div>
                 ))
@@ -196,13 +235,10 @@ const AdminDashboard = () => {
           <>
             <h2 style={styles.title}>📅 Monthly Reports</h2>
             <div style={styles.grid}>
-              {reports.map(r => (
-                <div key={r.report_id} style={styles.glassCard} className="card3d">
-                  <h3>{r.report_month}</h3>
-                  <p>Total Requests: {r.total_requests}</p>
-                  <p>Pending: {r.pending_requests}</p>
-                  <p>Completed: {r.completed_requests}</p>
-                  <p>Blood Units: {r.total_blood_units}</p>
+              {monthlyReport.map((r, i) => (
+                <div key={i} style={styles.glassCard} className="card3d">
+                  <h3>{r.month}</h3>
+                  <p>Total Emergencies: {r.total_emergencies}</p>
                 </div>
               ))}
             </div>
@@ -279,34 +315,24 @@ const Table = ({ title, headers, rows }) => (
 /* ================= STYLES ================= */
 
 const styles = {
-  page:{display:"flex",minHeight:"100vh",
-    background:"linear-gradient(135deg,#141e30,#243b55)"},
-  sidebar:{width:260,padding:20,color:"#fff",
-    background:"linear-gradient(180deg,#0d47a1,#1565c0)"},
-  menuBtn:{width:"100%",padding:10,marginBottom:8,
-    background:"rgba(255,255,255,0.15)",border:"none",
-    color:"#fff",borderRadius:8,cursor:"pointer"},
-  logout:{marginTop:15,width:"100%",padding:10,
-    background:"#d32f2f",border:"none",color:"#fff",borderRadius:8},
+  page:{display:"flex",minHeight:"100vh",background:"linear-gradient(135deg,#141e30,#243b55)"},
+  sidebar:{width:260,padding:20,color:"#fff",background:"linear-gradient(180deg,#0d47a1,#1565c0)"},
+  menuBtn:{width:"100%",padding:10,marginBottom:8,background:"rgba(255,255,255,0.15)",border:"none",color:"#fff",borderRadius:8,cursor:"pointer"},
+  logout:{marginTop:15,width:"100%",padding:10,background:"#d32f2f",border:"none",color:"#fff",borderRadius:8},
   content:{flex:1,padding:30},
   title:{marginBottom:15,color:"#fff"},
   grid:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16},
-  glassCard:{background:"rgba(255,255,255,0.25)",backdropFilter:"blur(10px)",
-    padding:20,borderRadius:16,color:"#fff",cursor:"pointer",
-    boxShadow:"0 15px 35px rgba(0,0,0,0.3)"},
+  glassCard:{background:"rgba(255,255,255,0.25)",backdropFilter:"blur(10px)",padding:20,borderRadius:16,color:"#fff"},
   detailCard:{marginTop:20,background:"#fff",padding:20,borderRadius:16},
   smallCard:{background:"#e3f2fd",padding:10,borderRadius:8},
   table:{width:"100%",borderCollapse:"collapse",background:"#fff",borderRadius:12},
   formCard:{width:320,background:"#fff",padding:20,borderRadius:16},
   input:{width:"100%",padding:10,marginBottom:10},
-  primaryBtn:{width:"100%",padding:10,background:"#1565c0",
-    color:"#fff",border:"none",borderRadius:8},
-
-  th:{padding:"12px",background:"#f5f5f5",fontWeight:"bold"},
+  primaryBtn:{width:"100%",padding:10,background:"#1565c0",color:"#fff",border:"none",borderRadius:8},
+  th:{padding:"12px",background:"#f5f5f5"},
   td:{padding:"10px",borderBottom:"1px solid #eee"},
   trEven:{background:"#fafafa"},
   trOdd:{background:"#ffffff"},
-
   activityCard:{background:"#fff",padding:20,borderRadius:16},
   activityItem:{borderBottom:"1px solid #eee",padding:"10px 0"},
   activityHospital:{fontWeight:"bold"},

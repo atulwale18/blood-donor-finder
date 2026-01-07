@@ -7,11 +7,13 @@ router.get("/activity", (req, res) => {
   const sql = `
     SELECT 
       h.hospital_name,
+      h.mobile AS hospital_mobile,
       er.blood_group,
       er.status,
       er.created_at
     FROM emergency_requests er
     JOIN hospitals h ON h.hospital_id = er.hospital_id
+    WHERE er.created_at >= NOW() - INTERVAL 2 HOUR
     ORDER BY er.created_at DESC
     LIMIT 5
   `;
@@ -24,7 +26,6 @@ router.get("/activity", (req, res) => {
     res.json(rows);
   });
 });
-
 
 /* ================= DONORS ================= */
 router.get("/donors", (req, res) => {
@@ -72,7 +73,11 @@ router.get("/inventory", (req, res) => {
 /* ================= ACTIVE REQUESTS ================= */
 router.get("/requests", (req, res) => {
   const sql = `
-    SELECT h.hospital_name, er.blood_group, er.status
+    SELECT 
+      h.hospital_name,
+      er.blood_group,
+      er.status,
+      er.created_at
     FROM emergency_requests er
     JOIN hospitals h ON h.hospital_id = er.hospital_id
     ORDER BY er.created_at DESC
@@ -88,8 +93,8 @@ router.post("/requests", (req, res) => {
   const { hospital_id, blood_group } = req.body;
 
   const sql = `
-    INSERT INTO emergency_requests (hospital_id, blood_group, status)
-    VALUES (?, ?, 'pending')
+    INSERT INTO emergency_requests (hospital_id, blood_group, status, created_at)
+    VALUES (?, ?, 'pending', NOW())
   `;
 
   db.query(sql, [hospital_id, blood_group], (err) => {

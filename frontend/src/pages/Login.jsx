@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const navigate = useNavigate();
 
+  // NOTE: keeping variable name as `email` to avoid breaking backend
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -30,7 +31,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert("Please enter email and password");
+      alert("Please enter email/mobile and password");
       return;
     }
 
@@ -43,7 +44,7 @@ const Login = () => {
 
     try {
       const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email: email.trim(),
+        email: email.trim(),   // email OR mobile (backend will handle later)
         password: password.trim()
       });
 
@@ -69,9 +70,10 @@ const Login = () => {
         <h2 style={styles.title}>Welcome Back 👋</h2>
         <p style={styles.subtitle}>Login to continue</p>
 
+        {/* ✅ UPDATED LABEL */}
         <input
-          type="email"
-          placeholder="Email address"
+          type="text"
+          placeholder="Email or Mobile Number"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={styles.input}
@@ -117,6 +119,14 @@ const Login = () => {
         <button style={styles.btn} onClick={handleLogin}>
           Login
         </button>
+
+        {/* ✅ NEW: FORGOT PASSWORD */}
+        <p
+          style={{ marginTop: 10, color: "#e53935", cursor: "pointer", fontSize: 14 }}
+          onClick={() => navigate("/forgot-password")}
+        >
+          Forgot Password?
+        </p>
 
         <p style={styles.footerText}>
           Don’t have an account?{" "}

@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
 
 const app = express();
 
@@ -30,6 +32,7 @@ app.use("/api/emergency", emergencyRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/bloodbank", bloodBankRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* =====================
    SERVER

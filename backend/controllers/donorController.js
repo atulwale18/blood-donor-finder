@@ -164,7 +164,8 @@ exports.uploadProfilePhoto = (req, res) => {
     });
   }
 
-  const imagePath = req.file.path;
+  // ✅ FIX: store public relative path
+  const imagePath = `uploads/donors/${req.file.filename}`;
 
   const sql = `
     UPDATE donors

@@ -30,7 +30,6 @@ exports.createEmergency = (req, res) => {
 
     const requestId = result.insertId;
 
-    /* ---- KNN donor selection ---- */
     const knnSql = `
       SELECT
         d.donor_id,
@@ -133,7 +132,7 @@ exports.getEmergencyForDonor = (req, res) => {
 };
 
 /* =========================
-   GET EMERGENCY FOR HOSPITAL ✅ FIXED
+   GET EMERGENCY FOR HOSPITAL (2 HOURS EXPIRY)
 ========================= */
 exports.getEmergencyForHospital = (req, res) => {
   const hospitalId = req.params.hospitalId;
@@ -152,6 +151,7 @@ exports.getEmergencyForHospital = (req, res) => {
       ON d.donor_id = er.accepted_donor_id
     WHERE er.hospital_id = ?
       AND er.hospital_visible = 1
+      AND er.created_at >= NOW() - INTERVAL 2 HOUR
     ORDER BY er.created_at DESC
   `;
 
@@ -166,7 +166,7 @@ exports.getEmergencyForHospital = (req, res) => {
 };
 
 /* =========================
-   GET NOTIFIED DONORS (Hospital)
+   GET NOTIFIED DONORS (MISSING FIX)
 ========================= */
 exports.getNotifiedDonorsForHospital = (req, res) => {
   const requestId = req.params.requestId;
@@ -184,7 +184,7 @@ exports.getNotifiedDonorsForHospital = (req, res) => {
 
   db.query(sql, [requestId], (err, result) => {
     if (err) {
-      console.error("Notified donor fetch error:", err);
+      console.error("Notified donors fetch error:", err);
       return res.status(500).json({ message: "DB error" });
     }
 

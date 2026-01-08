@@ -1,9 +1,20 @@
+require("dotenv").config();
+
 const db = require("../config/db");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
+const twilio = require("twilio");
 
 /* =====================
-   EMAIL CONFIG (REAL)
+   TWILIO CLIENT
+===================== */
+const client = twilio(
+  process.env.TWILIO_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+/* =====================
+   EMAIL CONFIG
 ===================== */
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -13,10 +24,8 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-
-
 /* =====================
-   HELPER: GET LAT/LON FROM ADDRESS / CITY
+   HELPER: GET LAT/LON
 ===================== */
 const getLatLngFromCity = async (address, city, district) => {
   try {
@@ -46,7 +55,7 @@ const getLatLngFromCity = async (address, city, district) => {
 };
 
 /* =====================
-   REGISTER (UNCHANGED)
+   REGISTER
 ===================== */
 exports.register = async (req, res) => {
   let {
@@ -76,7 +85,7 @@ exports.register = async (req, res) => {
 
   if (role === "hospital" && (!latitude || !longitude)) {
     return res.status(400).json({
-      message: "Hospital location is required to find nearby blood banks"
+      message: "Hospital location is required"
     });
   }
 
@@ -86,10 +95,7 @@ exports.register = async (req, res) => {
   `;
 
   db.query(userSql, [email, password, role], (err, userResult) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Registration failed" });
-    }
+    if (err) return res.status(500).json({ message: "Registration failed" });
 
     const user_id = userResult.insertId;
 
@@ -129,6 +135,7 @@ exports.register = async (req, res) => {
       `;
 
       return db.query(
+        hospitalSql,
         [
           user_id,
           name,
@@ -143,12 +150,12 @@ exports.register = async (req, res) => {
       );
     }
 
-    return res.json({ message: "User registered successfully" });
+    res.json({ message: "User registered successfully" });
   });
 };
 
 /* =====================
-   LOGIN (EMAIL OR MOBILE)
+   LOGIN
 ===================== */
 exports.login = (req, res) => {
   let { email, password } = req.body;
@@ -156,86 +163,44 @@ exports.login = (req, res) => {
   email = email.trim();
   password = password.trim();
 
-  const userSql = `
+  const sql = `
     SELECT user_id, role
     FROM users
     WHERE (email = ? OR mobile = ?)
       AND password = ?
   `;
 
-  db.query(userSql, [email, email, password], (err, users) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Server error" });
-    }
-
-    if (users.length === 0) {
+  db.query(sql, [email, email, password], (err, users) => {
+    if (err || users.length === 0)
       return res.status(401).json({ message: "Invalid credentials" });
-    }
 
-    const user = users[0];
-
-    if (user.role === "donor") {
-      return db.query(
-        `SELECT donor_id FROM donors WHERE user_id = ?`,
-        [user.user_id],
-        (err, donors) => {
-          if (err || donors.length === 0) {
-            return res.status(404).json({ message: "Donor not found" });
-          }
-
-          return res.json({
-            message: "Login success",
-            role: "donor",
-            user_id: user.user_id,
-            donor_id: donors[0].donor_id
-          });
-        }
-      );
-    }
-
-    if (user.role === "hospital") {
-      return db.query(
-        `SELECT hospital_id FROM hospitals WHERE user_id = ?`,
-        [user.user_id],
-        (err, hospitals) => {
-          if (err || hospitals.length === 0) {
-            return res.status(404).json({ message: "Hospital not found" });
-          }
-
-          return res.json({
-            message: "Login success",
-            role: "hospital",
-            user_id: user.user_id,
-            hospital_id: hospitals[0].hospital_id
-          });
-        }
-      );
-    }
-
-    if (user.role === "admin") {
-      return res.json({
-        message: "Login success",
-        role: "admin",
-        user_id: user.user_id
-      });
-    }
+    res.json({
+      message: "Login success",
+      role: users[0].role,
+      user_id: users[0].user_id
+    });
   });
 };
 
 /* =====================
-   FORGOT PASSWORD (REAL EMAIL OTP)
+   FORGOT PASSWORD (TWILIO VERIFY)
 ===================== */
 exports.forgotPassword = (req, res) => {
   const { identifier } = req.body;
 
   const sql = `
-    SELECT user_id, email, mobile
-    FROM users
-    WHERE email = ? OR mobile = ?
+    SELECT u.user_id, u.email,
+           d.mobile AS donor_mobile,
+           h.mobile AS hospital_mobile
+    FROM users u
+    LEFT JOIN donors d ON d.user_id = u.user_id
+    LEFT JOIN hospitals h ON h.user_id = u.user_id
+    WHERE u.email = ?
+       OR d.mobile = ?
+       OR h.mobile = ?
   `;
 
-  db.query(sql, [identifier, identifier], (err, users) => {
+  db.query(sql, [identifier, identifier, identifier], async (err, users) => {
     if (err || users.length === 0)
       return res.status(404).json({ message: "User not found" });
 
@@ -251,28 +216,36 @@ exports.forgotPassword = (req, res) => {
           `INSERT INTO password_resets (user_id, otp, expires_at)
            VALUES (?, ?, ?)`,
           [user.user_id, otp, expires],
-          () => {
-            if (user.email) {
+          async () => {
+
+            // EMAIL
+            if (identifier.includes("@") && user.email) {
               transporter.sendMail(
                 {
-                  from: "Blood Donor Finder <YOUR_GMAIL@gmail.com>",
+                  from: "Blood Donor Finder <blooddonorportal@gmail.com>",
                   to: user.email,
                   subject: "Password Reset OTP",
-                  text: `Your OTP for password reset is ${otp}. It is valid for 5 minutes.`
+                  text: `Your OTP is ${otp}`
                 },
-                (err) => {
-                  if (err) {
-                    console.error("Email error:", err);
-                    return res.status(500).json({ message: "Failed to send OTP email" });
-                  }
-
-                  return res.json({ message: "OTP sent to email" });
-                }
+                () => res.json({ message: "OTP sent to email" })
               );
-            } else {
-              return res.status(400).json({
-                message: "No email found for this user"
-              });
+            }
+
+            // MOBILE (TWILIO VERIFY)
+            else {
+              try {
+                await client.verify.v2
+                  .services(process.env.TWILIO_VERIFY_SID)
+                  .verifications.create({
+                    to: `+91${identifier}`,
+                    channel: "sms"
+                  });
+
+                res.json({ message: "OTP sent to mobile" });
+              } catch (err) {
+                console.error("Twilio error:", err.message);
+                res.status(500).json({ message: "Failed to send OTP" });
+              }
             }
           }
         );
@@ -282,48 +255,47 @@ exports.forgotPassword = (req, res) => {
 };
 
 /* =====================
-   VERIFY OTP (UNCHANGED)
+   VERIFY OTP (TWILIO VERIFY)
 ===================== */
-exports.verifyOtp = (req, res) => {
-  const { identifier, otp } = req.body;
+exports.verifyOtp = async (req, res) => {
+  let { identifier, otp } = req.body;
 
-  const sql = `
-    SELECT u.user_id
-    FROM users u
-    JOIN password_resets pr ON pr.user_id = u.user_id
-    WHERE (u.email = ? OR u.mobile = ?)
-      AND TRIM(pr.otp) = TRIM(?)
-      AND pr.expires_at > NOW()
-  `;
+  try {
+    const check = await client.verify.v2
+      .services(process.env.TWILIO_VERIFY_SID)
+      .verificationChecks.create({
+        to: `+91${identifier}`,
+        code: otp
+      });
 
-  db.query(sql, [identifier, identifier, otp], (err, rows) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Server error" });
-    }
-
-    if (rows.length === 0) {
+    if (check.status !== "approved") {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
     res.json({ message: "OTP verified" });
-  });
+  } catch (err) {
+    console.error("Verify error:", err.message);
+    res.status(500).json({ message: "OTP verification failed" });
+  }
 };
 
-
 /* =====================
-   RESET PASSWORD (UNCHANGED)
+   RESET PASSWORD
 ===================== */
 exports.resetPassword = (req, res) => {
   const { identifier, newPassword } = req.body;
 
   const sql = `
-    SELECT user_id
-    FROM users
-    WHERE email = ? OR mobile = ?
+    SELECT u.user_id
+    FROM users u
+    LEFT JOIN donors d ON d.user_id = u.user_id
+    LEFT JOIN hospitals h ON h.user_id = u.user_id
+    WHERE u.email = ?
+       OR d.mobile = ?
+       OR h.mobile = ?
   `;
 
-  db.query(sql, [identifier, identifier], (err, users) => {
+  db.query(sql, [identifier, identifier, identifier], (err, users) => {
     if (err || users.length === 0)
       return res.status(404).json({ message: "User not found" });
 

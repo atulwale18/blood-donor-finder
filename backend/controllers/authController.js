@@ -255,11 +255,42 @@ exports.forgotPassword = (req, res) => {
 };
 
 /* =====================
-   VERIFY OTP (TWILIO VERIFY)
+   VERIFY OTP (EMAIL + MOBILE)
 ===================== */
 exports.verifyOtp = async (req, res) => {
   let { identifier, otp } = req.body;
 
+  identifier = identifier.trim();
+  otp = otp.trim();
+
+  // 🔹 EMAIL OTP → verify from DB
+  if (identifier.includes("@")) {
+    const sql = `
+      SELECT u.user_id
+      FROM users u
+      JOIN password_resets pr ON pr.user_id = u.user_id
+      WHERE u.email = ?
+        AND TRIM(pr.otp) = TRIM(?)
+        AND pr.expires_at > NOW()
+    `;
+
+    return db.query(sql, [identifier, otp], (err, rows) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "Server error" });
+      }
+
+      if (rows.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "Invalid or expired OTP" });
+      }
+
+      return res.json({ message: "OTP verified" });
+    });
+  }
+
+  // 🔹 MOBILE OTP → verify using Twilio
   try {
     const check = await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SID)
@@ -269,15 +300,20 @@ exports.verifyOtp = async (req, res) => {
       });
 
     if (check.status !== "approved") {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired OTP" });
     }
 
-    res.json({ message: "OTP verified" });
+    return res.json({ message: "OTP verified" });
   } catch (err) {
-    console.error("Verify error:", err.message);
-    res.status(500).json({ message: "OTP verification failed" });
+    console.error("Twilio Verify error:", err.message);
+    return res.status(500).json({
+      message: "OTP verification failed"
+    });
   }
 };
+
 
 /* =====================
    RESET PASSWORD

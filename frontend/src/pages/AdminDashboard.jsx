@@ -22,6 +22,19 @@ const AdminDashboard = () => {
   const [reqHospital, setReqHospital] = useState("");
   const [reqBlood, setReqBlood] = useState("");
 
+  /* ===== ADD BLOOD BANK (NEW) ===== */
+  const [showAddBank, setShowAddBank] = useState(false);
+  const [newBank, setNewBank] = useState({
+    name: "",
+    mobile: "",
+    email: "",
+    address: "",
+    location: "",
+    city: "",
+    latitude: "",
+    longitude: ""
+  });
+
   /* ================= DATE HELPERS ================= */
   const formatDateTime = (date) => {
     if (!date) return "-";
@@ -39,12 +52,18 @@ const AdminDashboard = () => {
 
   /* ================= LOAD DATA ================= */
   useEffect(() => {
-    axios.get("http://localhost:5000/api/admin/donors").then(res => setDonors(res.data));
-    axios.get("http://localhost:5000/api/admin/hospitals").then(res => setHospitals(res.data));
-    axios.get("http://localhost:5000/api/admin/bloodbanks").then(res => setBloodBanks(res.data));
-    axios.get("http://localhost:5000/api/admin/inventory").then(res => setInventory(res.data));
+    axios.get("http://localhost:5000/api/admin/donors")
+      .then(res => setDonors(res.data));
 
-    /* ✅ UPDATED: activity API */
+    axios.get("http://localhost:5000/api/admin/hospitals")
+      .then(res => setHospitals(res.data));
+
+    axios.get("http://localhost:5000/api/admin/bloodbanks")
+      .then(res => setBloodBanks(res.data));
+
+    axios.get("http://localhost:5000/api/admin/inventory")
+      .then(res => setInventory(res.data));
+
     axios.get("http://localhost:5000/api/admin/activity")
       .then(res => setRequests(res.data));
 
@@ -70,6 +89,35 @@ const AdminDashboard = () => {
       setReqHospital("");
       setReqBlood("");
     });
+  };
+
+  /* ================= ADD BLOOD BANK ================= */
+  const addBloodBank = () => {
+    if (!newBank.name || !newBank.city) {
+      alert("Name and City are required");
+      return;
+    }
+
+    axios.post("http://localhost:5000/api/admin/add-bloodbank", newBank)
+      .then(() =>
+        axios.get("http://localhost:5000/api/admin/bloodbanks")
+      )
+      .then(res => {
+        setBloodBanks(res.data);
+        setShowAddBank(false);
+        setNewBank({
+          name: "",
+          mobile: "",
+          email: "",
+          address: "",
+          location: "",
+          city: "",
+          latitude: "",
+          longitude: ""
+        });
+        alert("Blood bank added successfully");
+      })
+      .catch(() => alert("Failed to add blood bank"));
   };
 
   /* ================= RENDER ================= */
@@ -104,18 +152,11 @@ const AdminDashboard = () => {
               ) : (
                 requests.map((r, i) => (
                   <div key={i} style={styles.activityItem}>
-                    <p style={styles.activityHospital}>
-                      🏥 {r.hospital_name}
-                    </p>
-
-                    <p style={{ fontSize: 13 }}>
-                      📞 {r.hospital_mobile}
-                    </p>
-
+                    <p style={styles.activityHospital}>🏥 {r.hospital_name}</p>
+                    <p style={{ fontSize: 13 }}>📞 {r.hospital_mobile}</p>
                     <p style={styles.activityText}>
                       🚨 Emergency request raised for <b>{r.blood_group}</b>
                     </p>
-
                     <span style={styles.activityTime}>
                       ⏰ {timeAgo(r.created_at)}
                     </span>
@@ -148,6 +189,36 @@ const AdminDashboard = () => {
         return (
           <>
             <h2 style={styles.title}>🏦 Blood Banks</h2>
+
+            <button
+              style={{ ...styles.primaryBtn, width: 220, marginBottom: 20 }}
+              onClick={() => setShowAddBank(!showAddBank)}
+            >
+              {showAddBank ? "Close Form" : "➕ Add Blood Bank"}
+            </button>
+
+            {showAddBank && (
+              <div style={styles.formCard} className="fadeIn">
+                <h3>Add Blood Bank</h3>
+
+                {Object.keys(newBank).map(k => (
+                  <input
+                    key={k}
+                    style={styles.input}
+                    placeholder={k}
+                    value={newBank[k]}
+                    onChange={e =>
+                      setNewBank({ ...newBank, [k]: e.target.value })
+                    }
+                  />
+                ))}
+
+                <button style={styles.primaryBtn} onClick={addBloodBank}>
+                  Save Blood Bank
+                </button>
+              </div>
+            )}
+
             <div style={styles.grid}>
               {bloodBanks.map(b => (
                 <div

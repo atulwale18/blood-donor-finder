@@ -1,5 +1,60 @@
 const db = require("../config/db");
 
+/* =====================
+   ADD BLOOD BANK (ADMIN)
+===================== */
+exports.addBloodBank = (req, res) => {
+  const {
+    name,
+    mobile,
+    email,
+    address,
+    location,
+    city,
+    latitude,
+    longitude
+  } = req.body;
+
+  if (!name || !city) {
+    return res.status(400).json({
+      message: "Name and city are required"
+    });
+  }
+
+  const sql = `
+    INSERT INTO blood_banks
+    (name, mobile, email, address, location, city, latitude, longitude)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      name,
+      mobile || null,
+      email || null,
+      address || null,
+      location || null,
+      city,
+      latitude || null,
+      longitude || null
+    ],
+    (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          message: "Failed to add blood bank"
+        });
+      }
+
+      return res.json({
+        message: "Blood bank added successfully"
+      });
+    }
+  );
+};
+
+
 /* =========================
    GET NEAREST BLOOD BANKS
    KNN + 15 KM EMERGENCY RANGE

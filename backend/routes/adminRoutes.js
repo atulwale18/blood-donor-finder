@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 
+/* ✅ USE EXISTING CONTROLLER */
+const bloodBankController = require("../controllers/bloodBankController");
+
 /* ================= ADMIN OVERVIEW ACTIVITY ================= */
 router.get("/activity", (req, res) => {
   const sql = `
@@ -56,6 +59,9 @@ router.get("/bloodbanks", (req, res) => {
     }
   );
 });
+
+/* ✅ FIXED: ADD BLOOD BANK ROUTE */
+router.post("/add-bloodbank", bloodBankController.addBloodBank);
 
 /* ================= INVENTORY ================= */
 router.get("/inventory", (req, res) => {

@@ -36,9 +36,12 @@ exports.getMonthlyReport = (req, res) => {
     COUNT(*) AS total_emergencies
   FROM emergency_requests
   WHERE YEAR(created_at) = YEAR(CURDATE())
-  GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+  GROUP BY
+    DATE_FORMAT(created_at, '%Y-%m'),
+    DATE_FORMAT(created_at, '%M %Y')
   ORDER BY month_key
 `;
+
 
 
   db.query(sql, (err, result) => {

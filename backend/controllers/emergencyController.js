@@ -131,6 +131,8 @@ exports.createEmergency = (req, res) => {
 /* =========================
    GET EMERGENCY FOR DONOR
 ========================= */
+
+
 exports.getEmergencyForDonor = (req, res) => {
   const userId = req.params.userId;
 
@@ -153,7 +155,8 @@ exports.getEmergencyForDonor = (req, res) => {
       ) AS distance
     FROM emergency_requests er
     JOIN hospitals h ON h.hospital_id = er.hospital_id
-    JOIN donors d ON d.user_id = ?
+    JOIN donors d ON d.donor_id = ?
+
     WHERE er.blood_group = d.blood_group
       AND er.status = 'pending'
       AND er.donor_visible = 1

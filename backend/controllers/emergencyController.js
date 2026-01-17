@@ -132,58 +132,57 @@ exports.createEmergency = (req, res) => {
    GET EMERGENCY FOR DONOR
 ========================= */
 
-
 exports.getEmergencyForDonor = (req, res) => {
   const userId = req.params.userId;
 
-  const sql = `
-    SELECT
-      er.request_id,
-      er.blood_group,
-      er.created_at,
-      h.hospital_name,
-      h.latitude AS h_lat,
-      h.longitude AS h_lon,
-      (
-        6371 * acos(
-          cos(radians(d.latitude)) *
-          cos(radians(h.latitude)) *
-          cos(radians(h.longitude) - radians(d.longitude)) +
-          sin(radians(d.latitude)) *
-          sin(radians(h.latitude))
-        )
-      ) AS distance
-    FROM emergency_requests er
-    JOIN hospitals h ON h.hospital_id = er.hospital_id
-    JOIN donors d ON d.donor_id = ?
+  // STEP 1: map user_id → donor_id
+  db.query(
+    "SELECT donor_id FROM donors WHERE user_id = ?",
+    [userId],
+    (err, donorRows) => {
+      if (err || donorRows.length === 0) return res.json(null);
 
-    WHERE er.blood_group = d.blood_group
-      AND er.status = 'pending'
-      AND er.donor_visible = 1
-      AND er.donor_expire_at > NOW()
-    ORDER BY distance ASC
-    LIMIT 1
-  `;
+      const donorId = donorRows[0].donor_id;
 
-  db.query(sql, [userId], (err, result) => {
-    if (err || result.length === 0) {
-      return res.json(null);
+      // STEP 2: fetch emergency using donor_id
+      const sql = `
+        SELECT
+          er.request_id,
+          er.blood_group,
+          er.created_at,
+          h.hospital_name,
+          h.latitude AS h_lat,
+          h.longitude AS h_lon,
+          endn.distance_km
+        FROM emergency_notified_donors endn
+        JOIN emergency_requests er ON er.request_id = endn.request_id
+        JOIN hospitals h ON h.hospital_id = er.hospital_id
+        WHERE endn.donor_id = ?
+          AND er.status = 'pending'
+          AND er.donor_visible = 1
+          AND er.donor_expire_at > NOW()
+        ORDER BY endn.distance_km ASC
+        LIMIT 1;
+      `;
+
+      db.query(sql, [donorId], (err2, rows) => {
+        if (err2 || rows.length === 0) return res.json(null);
+
+        const r = rows[0];
+        res.json({
+          request_id: r.request_id,
+          blood_group: r.blood_group,
+          hospital_name: r.hospital_name,
+          created_at: r.created_at,
+          distance_km: r.distance_km,
+          h_lat: r.h_lat,
+          h_lon: r.h_lon
+        });
+      });
     }
-
-    const row = result[0];
-    if (row.distance > MAX_DISTANCE) return res.json(null);
-
-    res.json({
-      request_id: row.request_id,
-      blood_group: row.blood_group,
-      hospital_name: row.hospital_name,
-      created_at: row.created_at,
-      distance_km: Number(row.distance.toFixed(2)),
-      h_lat: row.h_lat,
-      h_lon: row.h_lon
-    });
-  });
+  );
 };
+
 
 /* =========================
    GET EMERGENCY FOR HOSPITAL (2 HOURS EXPIRY)

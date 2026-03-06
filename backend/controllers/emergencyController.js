@@ -30,19 +30,17 @@ exports.getAdminOverview = (req, res) => {
 ========================= */
 exports.getMonthlyReport = (req, res) => {
   const sql = `
-  SELECT
-    DATE_FORMAT(created_at, '%Y-%m') AS month_key,
-    DATE_FORMAT(created_at, '%M %Y') AS month,
-    COUNT(*) AS total_emergencies
-  FROM emergency_requests
-  WHERE YEAR(created_at) = YEAR(CURDATE())
-  GROUP BY
-    DATE_FORMAT(created_at, '%Y-%m'),
-    DATE_FORMAT(created_at, '%M %Y')
-  ORDER BY month_key
-`;
-
-
+    SELECT
+      DATE_FORMAT(created_at, '%Y-%m') AS month_key,
+      DATE_FORMAT(created_at, '%M %Y') AS month,
+      COUNT(*) AS total_emergencies
+    FROM emergency_requests
+    WHERE YEAR(created_at) = YEAR(CURDATE())
+    GROUP BY
+      DATE_FORMAT(created_at, '%Y-%m'),
+      DATE_FORMAT(created_at, '%M %Y')
+    ORDER BY month_key
+  `;
 
   db.query(sql, (err, result) => {
     if (err) {
@@ -98,6 +96,14 @@ exports.createEmergency = (req, res) => {
       WHERE d.blood_group = ?
         AND d.latitude IS NOT NULL
         AND d.longitude IS NOT NULL
+        AND d.age BETWEEN 18 AND 65
+        AND d.weight >= 50
+        AND d.hemoglobin >= 12.5
+        AND d.recent_surgery = 'no'
+        AND (
+          d.last_donation_date IS NULL
+          OR DATEDIFF(CURDATE(), d.last_donation_date) >= 90
+        )
       ORDER BY distance ASC
       LIMIT ?
     `;
@@ -128,6 +134,7 @@ exports.createEmergency = (req, res) => {
   });
 };
 
+
 /* =========================
    GET EMERGENCY FOR DONOR
 ========================= */
@@ -135,7 +142,6 @@ exports.createEmergency = (req, res) => {
 exports.getEmergencyForDonor = (req, res) => {
   const userId = req.params.userId;
 
-  // STEP 1: map user_id → donor_id
   db.query(
     "SELECT donor_id FROM donors WHERE user_id = ?",
     [userId],
@@ -144,7 +150,6 @@ exports.getEmergencyForDonor = (req, res) => {
 
       const donorId = donorRows[0].donor_id;
 
-      // STEP 2: fetch emergency using donor_id
       const sql = `
         SELECT
           er.request_id,
@@ -162,7 +167,7 @@ exports.getEmergencyForDonor = (req, res) => {
           AND er.donor_visible = 1
           AND er.donor_expire_at > NOW()
         ORDER BY endn.distance_km ASC
-        LIMIT 1;
+        LIMIT 1
       `;
 
       db.query(sql, [donorId], (err2, rows) => {
@@ -185,7 +190,7 @@ exports.getEmergencyForDonor = (req, res) => {
 
 
 /* =========================
-   GET EMERGENCY FOR HOSPITAL (2 HOURS EXPIRY)
+   GET EMERGENCY FOR HOSPITAL
 ========================= */
 exports.getEmergencyForHospital = (req, res) => {
   const hospitalId = req.params.hospitalId;
@@ -218,8 +223,9 @@ exports.getEmergencyForHospital = (req, res) => {
   });
 };
 
+
 /* =========================
-   GET NOTIFIED DONORS (MISSING FIX)
+   GET NOTIFIED DONORS
 ========================= */
 exports.getNotifiedDonorsForHospital = (req, res) => {
   const requestId = req.params.requestId;
@@ -244,6 +250,7 @@ exports.getNotifiedDonorsForHospital = (req, res) => {
     res.json(result);
   });
 };
+
 
 /* =========================
    ACCEPT EMERGENCY
@@ -273,6 +280,7 @@ exports.acceptEmergency = (req, res) => {
   );
 };
 
+
 /* =========================
    DECLINE EMERGENCY
 ========================= */
@@ -295,6 +303,7 @@ exports.declineEmergency = (req, res) => {
     () => res.json({ message: "Declined" })
   );
 };
+
 
 /* =========================
    COMPLETE DONATION

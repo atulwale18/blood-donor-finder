@@ -19,7 +19,10 @@ const Register = () => {
     longitude: "",
     address: "",
     city: "",
-    district: ""
+    district: "",
+    weight: "",
+    hemoglobin: "",
+    recent_surgery: ""
   });
 
   const handleChange = (e) => {
@@ -43,6 +46,29 @@ const Register = () => {
     if (!form.email || !form.password || !form.mobile) {
       alert("Please fill required fields");
       return;
+    }
+
+    // Donor eligibility validation
+    if (role === "donor") {
+      if (form.age < 18 || form.age > 65) {
+        alert("Age must be between 18 and 65");
+        return;
+      }
+
+      if (form.weight < 50) {
+        alert("Weight must be at least 50 kg to donate blood");
+        return;
+      }
+
+      if (form.hemoglobin < 12.5) {
+        alert("Hemoglobin must be at least 12.5 g/dL");
+        return;
+      }
+
+      if (form.recent_surgery === "yes") {
+        alert("You cannot donate blood due to recent surgery");
+        return;
+      }
     }
 
     try {
@@ -168,6 +194,33 @@ const Register = () => {
               onChange={handleChange}
               style={styles.input}
             />
+
+            <input
+              type="number"
+              name="weight"
+              placeholder="Weight (kg)"
+              onChange={handleChange}
+              style={styles.input}
+            />
+
+            <input
+              type="number"
+              step="0.1"
+              name="hemoglobin"
+              placeholder="Hemoglobin (g/dL)"
+              onChange={handleChange}
+              style={styles.input}
+            />
+
+            <select
+              name="recent_surgery"
+              onChange={handleChange}
+              style={styles.input}
+            >
+              <option value="">Recent Surgery?</option>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
           </div>
         )}
 
@@ -274,8 +327,6 @@ const styles = {
   }
 };
 
-/* ================= ANIMATION ================= */
-
 const animationCSS = `
 .card3d {
   animation: fadeIn 0.8s ease-in-out;
@@ -292,24 +343,12 @@ input:focus, select:focus {
   animation: slideDown 0.4s ease-in-out;
 }
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 `;
 

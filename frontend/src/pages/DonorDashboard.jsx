@@ -3,6 +3,10 @@ import Cropper from "react-easy-crop";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+/* 🔔 FIREBASE IMPORTS */
+import { getToken } from "firebase/messaging";
+import { messaging } from "../firebase";
+
 /* ================= HELPER ================= */
 const getCroppedImage = async (imageSrc, cropPixels) => {
   const image = new Image();
@@ -52,6 +56,27 @@ const DonorDashboard = () => {
   const streamRef = useRef(null);
   const [cameraOn, setCameraOn] = useState(false);
 
+  /* 🔔 REQUEST FIREBASE NOTIFICATION PERMISSION */
+  const requestNotificationPermission = async (donorId) => {
+    try {
+      const token = await getToken(messaging, {
+        vapidKey:
+          "BJQnl17kiJf8Z5jojFBD-tCuyDbSXppBbNc6D8rMpCjeCLM552mpFhXZzCP63t4UhDG5N4KBlhQh4aMvfygTWGs"
+      });
+
+      console.log("FCM Token:", token);
+
+      if (token) {
+        await axios.post("http://localhost:5000/api/donor/save-token", {
+          donor_id: donorId,
+          token: token
+        });
+      }
+    } catch (error) {
+      console.log("Notification permission denied", error);
+    }
+  };
+
   /* ================= EMERGENCY ================= */
   const fetchEmergency = useCallback(() => {
     if (!userId) return;
@@ -63,10 +88,15 @@ const DonorDashboard = () => {
 
   useEffect(() => {
     if (!userId) return navigate("/");
+
     axios
       .get(`http://localhost:5000/api/donor/profile/${userId}`)
       .then((res) => {
         setDonor(res.data);
+
+        /* 🔔 Ask notification permission */
+        requestNotificationPermission(res.data.donor_id);
+
         fetchEmergency();
       });
   }, [userId, navigate, fetchEmergency]);
@@ -234,7 +264,6 @@ const DonorDashboard = () => {
   );
 };
 
-
 /* ================= STYLES ================= */
 const styles = {
   page: {
@@ -284,11 +313,10 @@ const styles = {
     borderRadius: 10
   },
 
-  /* ✅ Availability buttons spacing */
   btnRow: {
     display: "flex",
     gap: 12,
-    marginBottom: 20   // space before Logout
+    marginBottom: 20
   },
 
   availableBtn: {
@@ -325,7 +353,6 @@ const styles = {
     width: "100%"
   },
 
-  /* ✅ Logout spacing */
   logout: {
     width: "100%",
     background: "#d32f2f",
@@ -354,6 +381,3 @@ const styles = {
 };
 
 export default DonorDashboard;
-
-
-

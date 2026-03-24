@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "firebase": "^12.10.0",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.12",
+    "react-easy-crop": "^5.5.6",
+    "twilio": "^5.11.2"
+  }
+}

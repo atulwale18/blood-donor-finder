@@ -1,0 +1,12 @@
+node_modules/
+.env
+.npm
+package-lock.json
+firebase-adminsdk.json
+firebaseConfig.json
+firebase-service-account.json
+credentials.json
+*.log
+backend/uploads/
+backend/config/*.json
+backend/config/firebase-service-key.json.json

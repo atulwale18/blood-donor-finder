@@ -357,8 +357,8 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.sidebar}>
+    <div style={styles.page} className="page-container">
+      <div style={styles.sidebar} className="sidebar-container">
         <h2>Admin Panel</h2>
 
         <Menu label="Overview" onClick={() => setActive("overview")} />
@@ -371,6 +371,7 @@ const AdminDashboard = () => {
 
         <button
           style={styles.logout}
+          className="logoutBtn"
           onClick={() => {
             localStorage.clear();
             navigate("/");
@@ -380,7 +381,7 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      <div style={styles.content}>{renderSection()}</div>
+      <div style={styles.content} className="content-container">{renderSection()}</div>
       <style>{css}</style>
     </div>
   );
@@ -389,13 +390,14 @@ const AdminDashboard = () => {
 /* ================= COMPONENTS ================= */
 
 const Menu = ({ label, onClick }) => (
-  <button style={styles.menuBtn} onClick={onClick}>{label}</button>
+  <button style={styles.menuBtn} className="menuBtn" onClick={onClick}>{label}</button>
 );
 
 const Table = ({ title, headers, rows }) => (
   <div className="fadeIn">
     <h2 style={styles.title}>{title}</h2>
-    <table style={styles.table}>
+    <div className="table-wrapper">
+      <table style={styles.table}>
       <thead>
         <tr>
           <th style={styles.th}>Sr. No</th>
@@ -415,6 +417,7 @@ const Table = ({ title, headers, rows }) => (
         ))}
       </tbody>
     </table>
+    </div>
   </div>
 );
 
@@ -433,8 +436,8 @@ const styles = {
   statsValue: { margin: "0 0 10px 0", fontSize: "2.5rem", fontWeight: "900" },
   detailCard:{marginTop:20,background:"#fff",padding:20,borderRadius:16,boxShadow:"0 10px 30px rgba(0,0,0,0.1)"},
   smallCard:{background:"#e3f2fd",padding:10,borderRadius:8},
-  table:{width:"100%",borderCollapse:"collapse",background:"#fff",borderRadius:"16px", overflow:"hidden", boxShadow:"0 10px 30px rgba(0,0,0,0.1)"},
-  formCard:{width:350,background:"#fff",padding:"30px",borderRadius:"20px",boxShadow:"0 15px 40px rgba(0,0,0,0.2)"},
+  table:{width:"100%",borderCollapse:"collapse",background:"#fff",borderRadius:"16px", overflow:"hidden"},
+  formCard:{width:"100%",maxWidth:350,background:"#fff",padding:"30px",borderRadius:"20px",boxShadow:"0 15px 40px rgba(0,0,0,0.2)"},
   input:{width:"100%",padding:"12px",marginBottom:"15px", borderRadius:"10px", border:"1px solid #ddd", fontSize:"1rem", outline:"none"},
   primaryBtn:{width:"100%",padding:"14px",background:"linear-gradient(135deg, #1565c0, #0d47a1)",color:"#fff",border:"none",borderRadius:"10px",fontWeight:"bold",fontSize:"1rem",cursor:"pointer",boxShadow:"0 4px 15px rgba(21,101,192,0.4)"},
   th:{padding:"16px",background:"#f8f9fa", color:"#333", textAlign:"left", borderBottom:"2px solid #eee"},
@@ -449,6 +452,15 @@ const styles = {
 };
 
 const css = `
+.page-container { flex-direction: row; }
+@media (max-width: 768px) {
+  .page-container { flex-direction: column !important; }
+  .sidebar-container { width: 100% !important; padding: 15px !important; display: flex !important; flex-wrap: wrap !important; justify-content: center !important; align-items: center !important; gap: 8px !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.1) !important; }
+  .sidebar-container h2 { width: 100%; text-align: center; margin-bottom: 5px !important; }
+  .content-container { padding: 15px !important; height: auto !important; overflow: visible !important; }
+  .menuBtn, .logoutBtn { width: auto !important; margin: 0 !important; font-size: 0.8rem !important; padding: 8px 12px !important; flex-grow: 1; text-align: center; }
+}
+.table-wrapper { width: 100%; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; }
 .fadeIn { animation:fade 0.5s ease-out; }
 .card3d { transition: transform 0.3s ease, box-shadow 0.3s ease; }
 .card3d:hover { transform:translateY(-10px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }

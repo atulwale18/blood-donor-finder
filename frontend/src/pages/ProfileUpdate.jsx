@@ -34,7 +34,7 @@ const ProfileUpdate = () => {
 
     const endpoint = role === "donor" ? `donor/profile` : `hospital/profile`;
     axios
-      .get(`http://localhost:5000/api/${endpoint}/${userId}`)
+      .get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/${endpoint}/${userId}`)
       .then((res) => {
         const data = res.data;
         setForm({
@@ -82,7 +82,7 @@ const ProfileUpdate = () => {
     };
 
     try {
-      await axios.put(`http://localhost:5000/api/${endpoint}/${userId}`, payload);
+      await axios.put(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/${endpoint}/${userId}`, payload);
       alert("Profile updated successfully!");
       if (role === "donor") navigate("/donor-dashboard");
       else navigate("/hospital-dashboard");
@@ -106,7 +106,7 @@ const ProfileUpdate = () => {
     const endpoint = role === "donor" ? `donor/change-password` : `hospital/change-password`;
 
     try {
-      await axios.put(`http://localhost:5000/api/${endpoint}/${userId}`, {
+      await axios.put(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/${endpoint}/${userId}`, {
         currentPassword: passwordForm.currentPassword,
         newPassword: passwordForm.newPassword
       });

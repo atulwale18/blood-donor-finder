@@ -52,25 +52,25 @@ const AdminDashboard = () => {
 
   /* ================= LOAD DATA ================= */
   useEffect(() => {
-    axios.get("http://localhost:5000/api/admin/donors")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/donors`)
       .then(res => setDonors(res.data));
 
-    axios.get("http://localhost:5000/api/admin/hospitals")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/hospitals`)
       .then(res => setHospitals(res.data));
 
-    axios.get("http://localhost:5000/api/admin/bloodbanks")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/bloodbanks`)
       .then(res => setBloodBanks(res.data));
 
-    axios.get("http://localhost:5000/api/admin/inventory")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/inventory`)
       .then(res => setInventory(res.data));
 
-    axios.get("http://localhost:5000/api/admin/activity")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/activity`)
       .then(res => setRequests(res.data));
 
-    axios.get("http://localhost:5000/api/emergency/admin/overview")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/admin/overview`)
       .then(res => setOverview(res.data));
 
-    axios.get("http://localhost:5000/api/emergency/admin/monthly-report")
+    axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/admin/monthly-report`)
       .then(res => setMonthlyReport(res.data));
   }, []);
 
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    axios.post("http://localhost:5000/api/admin/requests", {
+    axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/requests`, {
       hospital_id: reqHospital,
       blood_group: reqBlood
     }).then(() => {
@@ -98,9 +98,9 @@ const AdminDashboard = () => {
       return;
     }
 
-    axios.post("http://localhost:5000/api/admin/add-bloodbank", newBank)
+    axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/add-bloodbank`, newBank)
       .then(() =>
-        axios.get("http://localhost:5000/api/admin/bloodbanks")
+        axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/admin/bloodbanks`)
       )
       .then(res => {
         setBloodBanks(res.data);

@@ -32,7 +32,7 @@ const ResetPassword = () => {
       setLoading(true);
 
       await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
+        `${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/auth/reset-password`,
         {
           identifier: state.identifier,
           newPassword

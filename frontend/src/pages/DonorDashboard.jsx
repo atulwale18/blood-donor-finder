@@ -81,7 +81,7 @@ const DonorDashboard = () => {
       console.log("FCM TOKEN:", token);
 
       if (token) {
-        await axios.post("http://localhost:5000/api/donor/save-token", {
+        await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/donor/save-token`, {
           donor_id: donorId,
           token: token
         });
@@ -96,7 +96,7 @@ const DonorDashboard = () => {
     if (!userId) return;
 
     axios
-      .get(`http://localhost:5000/api/emergency/donor/${userId}`)
+      .get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/donor/${userId}`)
       .then((res) => setEmergency(res.data || null))
       .catch(() => setEmergency(null));
   }, [userId]);
@@ -105,7 +105,7 @@ const DonorDashboard = () => {
     if (!userId) return navigate("/");
 
     axios
-      .get(`http://localhost:5000/api/donor/profile/${userId}`)
+      .get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/donor/profile/${userId}`)
       .then((res) => {
         setDonor(res.data);
 
@@ -162,7 +162,7 @@ const DonorDashboard = () => {
     fd.append("profile_pic", blob);
 
     await axios.post(
-      `http://localhost:5000/api/donor/upload-photo/${donor.donor_id}`,
+      `${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/donor/upload-photo/${donor.donor_id}`,
       fd
     );
 
@@ -184,7 +184,7 @@ const DonorDashboard = () => {
   );
 
   const profileImg = donor.profile_pic
-    ? `http://localhost:5000/${donor.profile_pic}`
+    ? `https://atul-bdf-backend.loca.lt/${donor.profile_pic}`
     : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
   return (
@@ -341,7 +341,7 @@ const DonorDashboard = () => {
                 <button
                   style={{...styles.availableBtn, width: '100%', fontSize: '1.1rem'}}
                   onClick={() => {
-                    axios.post("http://localhost:5000/api/emergency/accept", {
+                    axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/accept`, {
                       request_id: emergency.request_id,
                       donor_id: donor.donor_id
                     }).then(() => {

@@ -4,8 +4,13 @@ import './index.css';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
+import axios from 'axios';
+
+// Global Axios Config to bypass LocalTunnel interceptor page
+axios.defaults.headers.common['Bypass-Tunnel-Reminder'] = 'true';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
 root.render(
   <React.StrictMode>
     <App />

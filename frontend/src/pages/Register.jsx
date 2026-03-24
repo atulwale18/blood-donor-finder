@@ -96,7 +96,7 @@ const Register = () => {
     if (!isValid) return;
 
     try {
-      await axios.post("http://localhost:5000/api/auth/register", { ...form, role });
+      await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/auth/register`, { ...form, role });
       alert("Registration successful. Please login. ✅");
       navigate("/");
     } catch {

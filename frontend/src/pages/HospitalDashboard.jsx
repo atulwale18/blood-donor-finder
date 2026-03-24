@@ -24,11 +24,11 @@ const HospitalDashboard = () => {
     }
 
     axios
-      .get(`http://localhost:5000/api/hospital/profile/${userId}`)
+      .get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/hospital/profile/${userId}`)
       .then((res) => {
         setHospital(res.data);
 
-        return axios.get("http://localhost:5000/api/bloodbank/nearby", {
+        return axios.get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/bloodbank/nearby`, {
           params: {
             latitude: res.data.latitude,
             longitude: res.data.longitude
@@ -47,7 +47,7 @@ const HospitalDashboard = () => {
 
     axios
       .get(
-        `http://localhost:5000/api/emergency/hospital/${hospital.hospital_id}`
+        `${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/hospital/${hospital.hospital_id}`
       )
       .then((res) => setEmergencies(res.data || []))
       .catch(() => {});
@@ -62,7 +62,7 @@ const HospitalDashboard = () => {
   ===================== */
   const fetchNotifiedDonors = (requestId) => {
     axios
-      .get(`http://localhost:5000/api/emergency/notified/${requestId}`)
+      .get(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/notified/${requestId}`)
       .then((res) =>
         setNotifiedDonors((prev) => ({
           ...prev,
@@ -77,7 +77,7 @@ const HospitalDashboard = () => {
   ===================== */
   const sendEmergency = async () => {
     try {
-      await axios.post("http://localhost:5000/api/emergency/create", {
+      await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/create`, {
         hospital_id: hospital.hospital_id,
         blood_group: bloodGroup
       });
@@ -94,7 +94,7 @@ const HospitalDashboard = () => {
   ===================== */
   const completeDonation = async (request_id) => {
     try {
-      await axios.post("http://localhost:5000/api/emergency/complete", {
+      await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/complete`, {
         request_id
       });
 

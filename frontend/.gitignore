@@ -24,3 +24,5 @@ yarn-error.log*
 
 # firebase private key
 backend/config/firebase-service-key.json
+
+.vercel

@@ -25,7 +25,7 @@ const VerifyOtp = () => {
     try {
       setLoading(true);
 
-      await axios.post("http://localhost:5000/api/auth/verify-otp", {
+      await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/auth/verify-otp`, {
         identifier: state.identifier,
         otp: otp.trim()
       });

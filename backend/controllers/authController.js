@@ -201,9 +201,10 @@ exports.forgotPassword = (req, res) => {
     WHERE u.email = ?
        OR d.mobile = ?
        OR h.mobile = ?
+       OR u.mobile = ?
   `;
 
-  db.query(sql, [identifier, identifier, identifier], async (err, users) => {
+  db.query(sql, [identifier, identifier, identifier, identifier], async (err, users) => {
     if (err || users.length === 0)
       return res.status(404).json({ message: "User not found" });
 

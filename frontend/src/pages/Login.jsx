@@ -83,7 +83,7 @@ const Login = () => {
       const res = await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/auth/login`, {
         email: email.trim(),
         password: password.trim()
-      });
+      }, { timeout: 10000 }); // 10 second timeout
 
       localStorage.setItem("user_id", res.data.user_id);
       localStorage.setItem("role", res.data.role);
@@ -101,6 +101,10 @@ const Login = () => {
       let serverMessage = "Invalid credentials";
       if (err.response && err.response.data && err.response.data.message) {
         serverMessage = err.response.data.message;
+      } else if (err.code === 'ECONNABORTED') {
+        serverMessage = "Request timed out. Please try again.";
+      } else if (!err.response) {
+        serverMessage = "Network error. Check your connection.";
       }
 
       if (nextAttempts >= 5) {
@@ -113,6 +117,7 @@ const Login = () => {
       generateCaptcha();
       setIsLoading(false);
     }
+
   };
 
   return (

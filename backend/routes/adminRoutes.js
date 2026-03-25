@@ -32,7 +32,7 @@ router.get("/activity", (req, res) => {
 
 /* ================= DONORS ================= */
 router.get("/donors", (req, res) => {
-  db.query("SELECT name, blood_group, mobile FROM donors", (err, rows) => {
+  db.query("SELECT name, blood_group, mobile, hemoglobin FROM donors", (err, rows) => {
     if (err) return res.status(500).json({ message: "Error loading donors" });
     res.json(rows);
   });

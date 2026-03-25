@@ -294,6 +294,7 @@ const HospitalDashboard = () => {
                         <p style={{ margin: '0 0 5px 0', color: '#333' }}><b>👤 {d.name}</b></p>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#555' }}>
                           <span>📞 {d.mobile}</span>
+                          <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>🩸 HB: {d.hemoglobin ? `${d.hemoglobin} g/dL` : 'N/A'}</span>
                           <span style={{ color: '#1565c0', fontWeight: 'bold' }}>📍 {(d.distance_km ?? d.distance)?.toFixed?.(2)} km</span>
                         </div>
                       </div>

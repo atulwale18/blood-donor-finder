@@ -395,6 +395,7 @@ exports.getNotifiedDonorsForHospital = (req, res) => {
     SELECT
       d.name,
       d.mobile,
+      d.hemoglobin,
       endn.distance_km
     FROM emergency_notified_donors endn
     JOIN donors d ON d.donor_id = endn.donor_id

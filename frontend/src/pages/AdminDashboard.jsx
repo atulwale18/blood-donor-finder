@@ -206,8 +206,8 @@ const AdminDashboard = () => {
         return (
           <Table
             title="🧍 Donors"
-            headers={["Name", "Blood", "Mobile"]}
-            rows={donors.map(d => [d.name, d.blood_group, d.mobile])}
+            headers={["Name", "Blood", "Mobile", "HB Score"]}
+            rows={donors.map(d => [d.name, d.blood_group, d.mobile, d.hemoglobin ? `${d.hemoglobin} g/dL` : "N/A"])}
           />
         );
 

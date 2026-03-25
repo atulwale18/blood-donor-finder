@@ -22,6 +22,7 @@ const Register = () => {
     city: "",
     district: "",
     weight: "",
+    hemoglobin: "",
     last_donation_date: "",
     recent_surgery: "",
     is_available: "Available"
@@ -45,6 +46,7 @@ const Register = () => {
       if (form.weight && Number(form.weight) < 50) medicalIssue = true;
       if (form.recent_surgery === "yes") medicalIssue = true;
       if (form.age && (Number(form.age) < 18 || Number(form.age) > 65)) medicalIssue = true;
+      if (form.hemoglobin && Number(form.hemoglobin) < 12.5) medicalIssue = true;
 
       if (medicalIssue) {
         warn = "⚠️ You are currently not eligible for emergency donation. You can still register, but your status is set to 'Not Available'.";
@@ -67,7 +69,7 @@ const Register = () => {
       valid = false;
     }
     if (role === "donor") {
-      if (!form.age || !form.gender || !form.blood_group || !form.weight || !form.recent_surgery) valid = false;
+      if (!form.age || !form.gender || !form.blood_group || !form.weight || !form.recent_surgery || !form.hemoglobin) valid = false;
     }
 
     setIsValid(valid);
@@ -177,6 +179,10 @@ const Register = () => {
                   <select name="recent_surgery" onChange={handleChange} style={{...styles.input, borderColor: form.recent_surgery === "yes" ? "#d32f2f" : "#ddd"}}>
                     <option value="">Select</option><option value="no">No</option><option value="yes">Yes</option>
                   </select>
+                </div>
+                <div style={styles.field}>
+                  <label style={styles.label}>HB Score (g/dL)</label>
+                  <input type="number" step="0.1" name="hemoglobin" placeholder="e.g. 13.5" onChange={handleChange} style={{...styles.input, borderColor: form.hemoglobin && form.hemoglobin < 12.5 ? "#d32f2f" : "#ddd"}} />
                 </div>
               </div>
               

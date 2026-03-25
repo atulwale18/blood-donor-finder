@@ -16,9 +16,29 @@ const Login = () => {
   /* ===== UX STATES ===== */
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  
+
   /* ===== SECURITY: LOGIN ATTEMPTS ===== */
   const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutTimeLeft, setLockoutTimeLeft] = useState(0);
+
+  const startLockout = (seconds) => {
+    setIsLocked(true);
+    setLockoutTimeLeft(seconds);
+
+    const intervalId = setInterval(() => {
+      setLockoutTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalId);
+          setIsLocked(false);
+          setLoginAttempts(0);
+          setErrorMsg("");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const generateCaptcha = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -38,8 +58,11 @@ const Login = () => {
     e.preventDefault();
     setErrorMsg("");
 
-    if (loginAttempts >= 5) {
-      setErrorMsg("🚫 Too many failed attempts. Please try again later.");
+    if (isLocked || loginAttempts >= 5) {
+      setErrorMsg(`🚫 Too many failed attempts. Please wait ${lockoutTimeLeft || 30} seconds.`);
+      if (!isLocked) {
+        startLockout(30);
+      }
       return;
     }
 
@@ -70,10 +93,23 @@ const Login = () => {
       if (res.data.role === "admin") navigate("/admin-dashboard");
       else if (res.data.role === "hospital") navigate("/hospital-dashboard");
       else navigate("/donor-dashboard");
-      
-    } catch {
-      setLoginAttempts(prev => prev + 1);
-      setErrorMsg(`❌ Invalid credentials. (${4 - loginAttempts} attempts left)`);
+
+    } catch (err) {
+      const nextAttempts = loginAttempts + 1;
+      setLoginAttempts(nextAttempts);
+
+      let serverMessage = "Invalid credentials";
+      if (err.response && err.response.data && err.response.data.message) {
+        serverMessage = err.response.data.message;
+      }
+
+      if (nextAttempts >= 5) {
+        setErrorMsg(`🚫 Too many failed attempts. Locked for 30 seconds.`);
+        startLockout(30);
+      } else {
+        setErrorMsg(`❌ ${serverMessage}. (${5 - nextAttempts} attempts left)`);
+      }
+
       generateCaptcha();
       setIsLoading(false);
     }
@@ -155,10 +191,10 @@ const Login = () => {
           {/* LOADING STATE ON BUTTON */}
           <button 
             type="submit" 
-            style={isLoading ? styles.btnLoading : styles.btn} 
-            disabled={isLoading || loginAttempts >= 5}
+            style={isLoading || isLocked ? styles.btnLoading : styles.btn} 
+            disabled={isLoading || isLocked}
           >
-            {isLoading ? "Logging in..." : "Login to Dashboard →"}
+            {isLoading ? "Logging in..." : isLocked ? `Locked (${lockoutTimeLeft || 30}s)` : "Login to Dashboard →"}
           </button>
         </form>
 

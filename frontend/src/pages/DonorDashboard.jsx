@@ -184,7 +184,7 @@ const DonorDashboard = () => {
   );
 
   const profileImg = donor.profile_pic
-    ? `https://atul-bdf-backend.loca.lt/${donor.profile_pic}`
+    ? `${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/${donor.profile_pic}`
     : "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
   return (

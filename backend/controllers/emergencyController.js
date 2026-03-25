@@ -56,7 +56,7 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
 
     // 2. Send Urgent Email via Nodemailer
     if (donor.email) {
-      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || "https://blood-donor-finder.vercel.app";
+      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || "https://ai-powered-blood-donor-finder.vercel.app";
       const mailOptions = {
         from: "Blood Donor Finder <blooddonorportal@gmail.com>",
         to: donor.email,
@@ -86,7 +86,7 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
 
     // 3. Send WhatsApp via Twilio
     if (donor.mobile) {
-      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || "https://blood-donor-finder.vercel.app";
+      const frontendUrl = process.env.REACT_APP_FRONTEND_URL || "https://ai-powered-blood-donor-finder.vercel.app";
       const waMessage = `🚨 Emergency Blood Request\n\nBlood Group: ${bloodGroup}\nHospital: ${hospitalName}\n\nPlease respond immediately.\n\nClick here: ${frontendUrl}/donor/login?requestId=${requestId || ''}`;
       await sendWhatsApp(donor.mobile, waMessage);
     }

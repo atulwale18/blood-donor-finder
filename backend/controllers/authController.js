@@ -163,24 +163,38 @@ exports.register = async (req, res) => {
 exports.login = (req, res) => {
   let { email, password } = req.body;
 
-  email = email.trim();
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email/Mobile and password are required" });
+  }
+
+  email = email.trim().toLowerCase();
   password = password.trim();
 
   const sql = `
-    SELECT user_id, role
+    SELECT user_id, role, password
     FROM users
-    WHERE (email = ? OR mobile = ?)
-      AND password = ?
+    WHERE email = ? OR mobile = ?
   `;
 
-  db.query(sql, [email, email, password], (err, users) => {
-    if (err || users.length === 0)
+  db.query(sql, [email, email], (err, users) => {
+    if (err) {
+      console.error("Login query error:", err);
+      return res.status(500).json({ message: "Login failed" });
+    }
+
+    if (users.length === 0) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const user = users[0];
+    if (user.password !== password) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     res.json({
       message: "Login success",
-      role: users[0].role,
-      user_id: users[0].user_id
+      role: user.role,
+      user_id: user.user_id
     });
   });
 };

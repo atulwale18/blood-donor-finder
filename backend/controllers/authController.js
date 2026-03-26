@@ -171,12 +171,12 @@ exports.login = (req, res) => {
   password = password.trim();
 
   const sql = `
-    SELECT user_id, role, password
+    SELECT user_id, role
     FROM users
-    WHERE email = ? OR mobile = ?
+    WHERE (email = ? OR mobile = ?) AND password = ?
   `;
 
-  db.query(sql, [email, email], (err, users) => {
+  db.query(sql, [email, email, password], (err, users) => {
     if (err) {
       console.error("Login query error:", err);
       return res.status(500).json({ message: "Login failed" });
@@ -187,10 +187,6 @@ exports.login = (req, res) => {
     }
 
     const user = users[0];
-    if (user.password !== password) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
     res.json({
       message: "Login success",
       role: user.role,

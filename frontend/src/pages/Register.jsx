@@ -101,8 +101,8 @@ const Register = () => {
       await axios.post(`${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/auth/register`, { ...form, role });
       alert("Registration successful. Please login. ✅");
       navigate("/");
-    } catch {
-      alert("Registration failed. Please try again.");
+    } catch (err) {
+      alert(err.response?.data?.message || "Registration failed. Please try again.");
     }
   };
 

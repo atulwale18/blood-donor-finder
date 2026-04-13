@@ -37,7 +37,11 @@ exports.updateDonorProfile = (req, res) => {
   // Update users table for email and mobile
   const userSql = `UPDATE users SET email = ?, mobile = ? WHERE user_id = ?`;
   db.query(userSql, [email, mobile, user_id], (err) => {
-    if (err) return res.status(500).json({ message: "Failed to update user context" });
+    if (err) {
+       console.error("User Context Update Error:", err);
+       if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: "Email or Mobile already in use by another account." });
+       return res.status(500).json({ message: "Failed to update user context", error: err.message });
+    }
 
     // Update donors table
     const donorSql = `
@@ -48,9 +52,12 @@ exports.updateDonorProfile = (req, res) => {
 
     db.query(
       donorSql,
-      [name, mobile, email, age, address, city, district, latitude, longitude, is_available || 'Available', user_id],
+      [name, mobile, email, age || null, address, city, district, latitude || null, longitude || null, is_available || 'Available', user_id],
       (err, result) => {
-        if (err) return res.status(500).json({ message: "Failed to update donor profile" });
+        if (err) {
+            console.error("Donor Profile Update Error:", err);
+            return res.status(500).json({ message: "Failed to update donor profile", error: err.message });
+        }
         return res.json({ message: "Profile updated successfully" });
       }
     );

@@ -64,7 +64,8 @@ exports.register = async (req, res) => {
     longitude,
     address,
     city,
-    district
+    district,
+    is_available
   } = req.body;
 
   email = email.toLowerCase().trim();
@@ -87,7 +88,12 @@ exports.register = async (req, res) => {
   `;
 
   db.query(userSql, [email, mobile, password, role], (err, userResult) => {
-    if (err) return res.status(500).json({ message: "Registration failed" });
+    if (err) {
+      if (err.code === 'ER_DUP_ENTRY') {
+        return res.status(400).json({ message: "Email or Mobile already registered." });
+      }
+      return res.status(500).json({ message: "Registration failed. Please check your data." });
+    }
 
     const user_id = userResult.insertId;
 
@@ -95,8 +101,8 @@ exports.register = async (req, res) => {
       const donorSql = `
         INSERT INTO donors
         (user_id, name, age, weight, hemoglobin, recent_surgery, gender, blood_group, mobile, last_donation_date,
-         latitude, longitude, address, city, district)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         latitude, longitude, address, city, district, is_available)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       return db.query(
@@ -116,7 +122,8 @@ exports.register = async (req, res) => {
           longitude || null,
           address || null,
           city || null,
-          district || null
+          district || null,
+          is_available || 'Available'
         ],
         (err) => {
           if (err) {

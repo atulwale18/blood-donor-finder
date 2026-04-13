@@ -206,7 +206,7 @@ const HospitalDashboard = () => {
                     </p>
 
                     <p style={styles.distance}>
-                      📏 {(b.distance_km ?? b.distance)?.toFixed?.(2) ?? "N/A"} km away
+                      📏 {b.distance_km != null ? Number(b.distance_km).toFixed(2) : (b.distance != null ? Number(b.distance).toFixed(2) : "N/A")} km away
                     </p>
                   </div>
 
@@ -295,7 +295,7 @@ const HospitalDashboard = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#555' }}>
                           <span>📞 {d.mobile}</span>
                           <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>🩸 HB: {d.hemoglobin ? `${d.hemoglobin} g/dL` : 'N/A'}</span>
-                          <span style={{ color: '#1565c0', fontWeight: 'bold' }}>📍 {d.distance_km ? Number(d.distance_km).toFixed(2) : (d.distance ? Number(d.distance).toFixed(2) : 'N/A')} km</span>
+                          <span style={{ color: '#1565c0', fontWeight: 'bold' }}>📍 {d.distance_km != null ? Number(d.distance_km).toFixed(2) : (d.distance != null ? Number(d.distance).toFixed(2) : 'N/A')} km</span>
                         </div>
                       </div>
                     ))}

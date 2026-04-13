@@ -1,3 +1,4 @@
+require("dotenv").config();
 const admin = require("../config/firebase-admin");
 const db = require("../config/db");
 const transporter = require("../config/mailer");

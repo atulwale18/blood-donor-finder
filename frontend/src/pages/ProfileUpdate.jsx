@@ -87,7 +87,7 @@ const ProfileUpdate = () => {
       if (role === "donor") navigate("/donor-dashboard");
       else navigate("/hospital-dashboard");
     } catch (err) {
-      alert("Failed to update profile");
+      alert(err.response?.data?.message || "Failed to update profile");
       console.error(err);
     }
   };

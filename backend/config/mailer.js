@@ -7,7 +7,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: "blooddonorportal@gmail.com",
-    pass: "xxcxsqxgbxifgdim" // Using the existing app password found in authController
+    pass: "kltd dwfv txnd dtzz" // Using the existing app password found in authController
   }
 });
 

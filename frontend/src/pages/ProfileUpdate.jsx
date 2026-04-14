@@ -87,7 +87,8 @@ const ProfileUpdate = () => {
       if (role === "donor") navigate("/donor-dashboard");
       else navigate("/hospital-dashboard");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to update profile");
+      const errorMsg = err.response?.data?.message || err.message || "Unknown Error";
+      alert("Failed to update profile. Server says: " + errorMsg);
       console.error(err);
     }
   };

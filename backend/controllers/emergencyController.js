@@ -48,10 +48,11 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
       };
 
       try {
-        await admin.messaging().send(message);
-        console.log("Push Notification sent to donor:", donor.donor_id);
+        admin.messaging().send(message)
+          .then(() => console.log("Push Notification sent to donor:", donor.donor_id))
+          .catch((err) => console.log("Push Notification error:", err.message));
       } catch (err) {
-        console.log("Push Notification error:", err);
+        console.log("Push Notification Exception:", err.message);
       }
     }
 
@@ -78,10 +79,11 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
       };
 
       try {
-        await transporter.sendMail(mailOptions);
-        console.log("Email Notification sent to donor:", donor.donor_id);
+        transporter.sendMail(mailOptions)
+          .then(() => console.log("Email Notification sent to donor:", donor.donor_id))
+          .catch((err) => console.log("Email Notification error:", err.message));
       } catch (err) {
-        console.log("Email Notification error:", err);
+        console.log("Email Exception:", err.message);
       }
     }
 
@@ -89,7 +91,7 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
     if (donor.mobile) {
       const frontendUrl = process.env.REACT_APP_FRONTEND_URL || "https://ai-powered-blood-donor-finder.vercel.app";
       const waMessage = `🚨 Emergency Blood Request\n\nBlood Group: ${bloodGroup}\nHospital: ${hospitalName}\n\nPlease respond immediately.\n\nClick here: ${frontendUrl}/donor/login?requestId=${requestId || ''}`;
-      await sendWhatsApp(donor.mobile, waMessage);
+      sendWhatsApp(donor.mobile, waMessage);
     }
   }
 };
@@ -464,18 +466,18 @@ exports.acceptEmergency = (req, res) => {
             // Push Notification
             if (other.fcm_token) {
               try {
-                await admin.messaging().send({
+                admin.messaging().send({
                   notification: { title: "Update on Blood Request", body: msg },
                   token: other.fcm_token
-                });
+                }).catch(e => console.log("Push Notification Promise error:", e.message));
               } catch (e) {
-                console.log("Push Notification error:", e);
+                console.log("Push Notification error:", e.message);
               }
             }
 
             // WhatsApp Notification
             if (other.mobile) {
-              await sendWhatsApp(other.mobile, `🚨 Update\n\n${msg}`);
+              sendWhatsApp(other.mobile, `🚨 Update\n\n${msg}`);
             }
 
             // Email Notification
@@ -487,9 +489,9 @@ exports.acceptEmergency = (req, res) => {
                 html: `<p>${msg}</p>`
               };
               try {
-                await transporter.sendMail(mailOptions);
+                transporter.sendMail(mailOptions).catch(e => console.log("Email error:", e));
               } catch (e) {
-                console.log("Email error:", e);
+                console.log("Email error:", e.message);
               }
             }
           }
@@ -573,7 +575,7 @@ exports.completeEmergency = (req, res) => {
           // 🎓 SEND E-CERTIFICATE VIA WHATSAPP
           if (info.mobile) {
             const waCert = `🏆 *CERTIFICATE OF APPRECIATION* 🏆\n\nThis certifies that *${info.name}* successfully donated *${info.blood_group}* blood at *${info.hospital_name}* on ${info.date}.\n\nYou are a real-life hero! ❤️ Someone is alive today because of you.\n\n- Blood Donor Finder`;
-            await sendWhatsApp(info.mobile, waCert);
+            sendWhatsApp(info.mobile, waCert);
           }
 
           // 🎓 SEND E-CERTIFICATE COMPONENT VIA EMAIL AS PDF ATTACHMENT

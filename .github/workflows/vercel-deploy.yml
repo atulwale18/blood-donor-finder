@@ -1,0 +1,24 @@
+name: Deploy Frontend to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy frontend to Vercel
+        uses: amondnet/vercel-action@v23
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: team_a0lnm8EzIlKUa9DXgp4SX8gd
+          vercel-project-id: prj_fZBRgWnijfQKUEDN5AaCTwOqRBjQ
+          vercel-args: --prod
+          working-directory: frontend
+          github-comment-deployment: true

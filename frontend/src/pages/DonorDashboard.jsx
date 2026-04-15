@@ -46,6 +46,7 @@ const DonorDashboard = () => {
   const [accepted, setAccepted] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
+  const [notificationPopup, setNotificationPopup] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -118,7 +119,15 @@ const DonorDashboard = () => {
     // Handle foreground messages
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground Message received: ", payload);
-      alert(`New Blood Alert: ${payload.notification?.title}\n${payload.notification?.body}`);
+      setNotificationPopup({
+        title: payload.notification?.title || "Blood Request Alert",
+        body: payload.notification?.body || "A donor request is nearby. Open the dashboard for details.",
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      });
+
+      window.setTimeout(() => {
+        setNotificationPopup(null);
+      }, 8000);
     });
 
     return () => unsubscribe();
@@ -189,7 +198,36 @@ const DonorDashboard = () => {
 
   return (
     <div style={styles.page}>
-      
+      {notificationPopup && (
+        <div style={styles.notificationOverlay} onClick={() => setNotificationPopup(null)}>
+          <div style={styles.notificationCard} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.notificationTop}>
+              <div style={styles.notificationIcon}>
+                <span style={styles.notificationBadge}>1</span>
+                🔔
+              </div>
+              <div style={styles.notificationTitleGroup}>
+                <div style={styles.notificationLabel}>New Notification</div>
+                <div style={styles.notificationTime}>{notificationPopup.timestamp}</div>
+              </div>
+              <button style={styles.notificationClose} onClick={() => setNotificationPopup(null)}>
+                ×
+              </button>
+            </div>
+            <h3 style={styles.notificationHeadline}>{notificationPopup.title}</h3>
+            <p style={styles.notificationMessage}>{notificationPopup.body}</p>
+            <button
+              style={styles.notificationAction}
+              onClick={() => {
+                setNotificationPopup(null);
+              }}
+            >
+              View Details →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ================= MODAL FOR PROFILE PIC ================= */}
       {showModal && (
         <div style={styles.modalOverlay}>
@@ -569,8 +607,106 @@ const styles = {
     background: "#333",
     borderRadius: "10px",
     overflow: "hidden"
-  }
+  },
 
+  notificationOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.35)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1100,
+    padding: "20px"
+  },
+  notificationCard: {
+    width: "100%",
+    maxWidth: "420px",
+    background: "#fff",
+    borderRadius: "24px",
+    padding: "24px",
+    boxShadow: "0 30px 80px rgba(0,0,0,0.18)",
+    textAlign: "center",
+    position: "relative"
+  },
+  notificationTop: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    marginBottom: "18px"
+  },
+  notificationIcon: {
+    width: "56px",
+    height: "56px",
+    borderRadius: "18px",
+    background: "linear-gradient(135deg, #fdd835, #fb8c00)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "1.4rem",
+    position: "relative"
+  },
+  notificationBadge: {
+    position: "absolute",
+    top: "-8px",
+    right: "-8px",
+    background: "#d32f2f",
+    color: "#fff",
+    width: "22px",
+    height: "22px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "0.8rem",
+    fontWeight: "700"
+  },
+  notificationTitleGroup: {
+    textAlign: "left",
+    flex: 1
+  },
+  notificationLabel: {
+    fontSize: "0.85rem",
+    fontWeight: "700",
+    letterSpacing: "0.08em",
+    color: "#757575",
+    textTransform: "uppercase"
+  },
+  notificationTime: {
+    fontSize: "0.85rem",
+    color: "#9e9e9e",
+    marginTop: "4px"
+  },
+  notificationClose: {
+    background: "transparent",
+    border: "none",
+    fontSize: "1.6rem",
+    lineHeight: "1",
+    cursor: "pointer",
+    color: "#757575"
+  },
+  notificationHeadline: {
+    margin: "0 0 10px",
+    fontSize: "1.4rem",
+    color: "#1f2937"
+  },
+  notificationMessage: {
+    margin: "0 0 24px",
+    fontSize: "1rem",
+    lineHeight: "1.6",
+    color: "#4b5563"
+  },
+  notificationAction: {
+    background: "#d32f2f",
+    color: "#fff",
+    border: "none",
+    borderRadius: "14px",
+    padding: "14px 22px",
+    cursor: "pointer",
+    fontWeight: "700",
+    fontSize: "1rem"
+  }
 };
 
 export default DonorDashboard;

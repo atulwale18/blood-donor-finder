@@ -58,24 +58,25 @@ const DonorDashboard = () => {
 
   /* 🔔 FIREBASE NOTIFICATION */
   const requestNotificationPermission = async (donorId) => {
+    if (typeof window === "undefined" || !("Notification" in window) || !("serviceWorker" in navigator)) {
+      console.log("Notifications or service workers are not supported in this browser.");
+      return;
+    }
+
     try {
       const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
 
       if (permission !== "granted") {
-        console.log("Notification permission denied");
+        console.log("Notification permission not granted:", permission);
         return;
       }
 
-      /* register service worker */
-      const registration = await navigator.serviceWorker.register(
-        "/firebase-messaging-sw.js"
-      );
-
+      const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
       await navigator.serviceWorker.ready;
 
       const token = await getToken(messaging, {
-        vapidKey:
-          "BJQnI17kiJf8Z5jojFBD-tCuyDbSXppBbNc6D8rMpCjeCLM552mpFhXZzCP63t4UhDG5N4KBlhQh4aMvfyGTWGs",
+        vapidKey: "BJQnI17kiJf8Z5jojFBD-tCuyDbSXppBbNc6D8rMpCjeCLM552mpFhXZzCP63t4UhDG5N4KBlhQh4aMvfyGTWGs",
         serviceWorkerRegistration: registration
       });
 
@@ -342,6 +343,18 @@ const DonorDashboard = () => {
             }}>
               ● {donor.is_available || "Available"}
             </div>
+
+            {notificationPermission !== "granted" && (
+              <div style={styles.notificationStatus}>
+                Notifications are currently <strong>{notificationPermission}</strong>.
+                <button
+                  style={styles.notificationEnableBtn}
+                  onClick={() => requestNotificationPermission(donor.donor_id)}
+                >
+                  Enable Notifications
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -607,6 +620,30 @@ const styles = {
     background: "#333",
     borderRadius: "10px",
     overflow: "hidden"
+  },
+
+  notificationStatus: {
+    marginTop: "14px",
+    padding: "12px 16px",
+    background: "#fff4e5",
+    border: "1px solid #ffcc80",
+    borderRadius: "14px",
+    color: "#6b4f00",
+    fontSize: "0.95rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px"
+  },
+
+  notificationEnableBtn: {
+    background: "#d32f2f",
+    color: "#fff",
+    border: "none",
+    borderRadius: "12px",
+    padding: "10px 16px",
+    cursor: "pointer",
+    fontWeight: "700"
   },
 
   notificationOverlay: {

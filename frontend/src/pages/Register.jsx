@@ -301,7 +301,7 @@ const styles = {
 
 const animationCSS = `
 .bannerSide { flex: 1.2; background: url('https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat; display: flex; flex-direction: column; position: relative; }
-.formSide { flex: 1.8; display: flex; justify-content: center; align-items: center; padding: 40px; background: linear-gradient(135deg, #0A192F, #172A45); max-height: 100vh; overflow-y: auto; }
+.formSide { flex: 1.8; display: flex; justify-content: center; align-items: center; padding: 40px; background: linear-gradient(135deg, #0A192F, #172A45); min-height: 100vh; }
 @media (max-width: 900px) { .bannerSide { display: none !important; } .formSide { padding: 20px; } }
 
 .card3d { animation: fadeIn 0.6s ease-out; }

@@ -444,8 +444,8 @@ const styles = {
 
   page:{
     minHeight:"100vh",
-    /* UI UX Enhancement: Premium vibrant gradient */
-    background:"linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #b71c1c 100%)",
+    /* UI UX Enhancement: Real-life image with vibrant premium dark gradient overlay */
+    background:"linear-gradient(to right, rgba(26,26,46,0.92), rgba(183,28,28,0.85)), url('https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=2000&auto=format&fit=crop') center/cover fixed",
     display:"flex",
     justifyContent:"center",
     alignItems:"center",

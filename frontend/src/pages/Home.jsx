@@ -58,20 +58,11 @@ const Home = () => {
         </div>
 
         <div style={styles.heroImage}>
-          <svg viewBox="0 0 200 200" style={styles.bloodDrop}>
-            <defs>
-              <linearGradient id="bloodGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: "#f44236", stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: "#d32f2f", stopOpacity: 1 }} />
-              </linearGradient>
-            </defs>
-            <path
-              d="M100,30 C80,50 60,70 60,95 C60,130 77,160 100,175 C123,160 140,130 140,95 C140,70 120,50 100,30 Z"
-              fill="url(#bloodGradient)"
-              filter="drop-shadow(0 10px 20px rgba(244, 66, 54, 0.3))"
-            />
-            <circle cx="100" cy="90" r="8" fill="#fff" opacity="0.6" />
-          </svg>
+          <img 
+            src="https://images.unsplash.com/photo-1615461066841-6116e61058f4?q=80&w=1500&auto=format&fit=crop" 
+            alt="Blood Donation Hero" 
+            style={{ width: "100%", maxWidth: "450px", borderRadius: "30px", boxShadow: "0 25px 50px rgba(244, 66, 54, 0.25)" }} 
+          />
         </div>
       </section>
 

@@ -352,8 +352,8 @@ const HospitalDashboard = () => {
 const styles = {
   page: {
     minHeight: "100vh",
-    /* Premium UX gradient with high-quality real-life medical photography overlay */
-    background: "linear-gradient(135deg, rgba(10,25,47,0.92) 0%, rgba(23,42,69,0.85) 50%, rgba(13,71,161,0.8) 100%), url('https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=2000&auto=format&fit=crop') center/cover fixed",
+    /* Premium UX gradient with high-quality real-life medical/doctor photography overlay */
+    background: "linear-gradient(135deg, rgba(10,25,47,0.93) 0%, rgba(23,42,69,0.88) 50%, rgba(13,71,161,0.82) 100%), url('https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=2000&auto=format&fit=crop') center/cover fixed",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",

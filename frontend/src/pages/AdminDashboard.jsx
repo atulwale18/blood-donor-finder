@@ -424,7 +424,7 @@ const Table = ({ title, headers, rows }) => (
 /* ================= STYLES ================= */
 
 const styles = {
-  page:{display:"flex",minHeight:"100vh",background:"linear-gradient(135deg, #0A192F 0%, #172A45 50%, #0d47a1 100%)", fontFamily: "'Inter', sans-serif"},
+  page:{display:"flex",minHeight:"100vh",background:"linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(23,42,69,0.90) 50%, rgba(13,71,161,0.85) 100%), url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2000&auto=format&fit=crop') center/cover fixed", fontFamily: "'Inter', sans-serif"},
   sidebar:{width:280,padding:"30px 20px",color:"#fff",background:"linear-gradient(180deg, rgba(13, 71, 161, 0.9), rgba(21, 101, 192, 0.9))", backdropFilter: "blur(10px)", borderRight: "1px solid rgba(255,255,255,0.1)", boxShadow: "5px 0 15px rgba(0,0,0,0.2)"},
   menuBtn:{width:"100%",padding:"14px",marginBottom:"12px",background:"rgba(255,255,255,0.1)",border:"1px solid rgba(255,255,255,0.05)",color:"#fff",borderRadius:"12px",cursor:"pointer",fontWeight:"bold",fontSize:"1rem",transition:"0.2s ease"},
   logout:{marginTop:"40px",width:"100%",padding:"14px",background:"linear-gradient(135deg, #d32f2f, #b71c1c)",border:"none",color:"#fff",borderRadius:"12px",fontWeight:"bold",fontSize:"1rem",cursor:"pointer",boxShadow:"0 4px 15px rgba(211,47,47,0.4)"},

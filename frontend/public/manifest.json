@@ -1,6 +1,6 @@
 {
-  "short_name": "BloodApp",
-  "name": "Blood Donor Finder System",
+  "short_name": "Blood Donor",
+  "name": "Blood Donor Finder",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,7 +8,7 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo512.png",
+      "src": "logo192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
@@ -21,5 +21,5 @@
   "start_url": "/",
   "display": "standalone",
   "theme_color": "#d32f2f",
-  "background_color": "#0A192F"
+  "background_color": "#ffffff"
 }

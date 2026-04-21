@@ -55,6 +55,7 @@ const DonorDashboard = () => {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraOn, setCameraOn] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState("default");
 
   /* 🔔 FIREBASE NOTIFICATION */
   const requestNotificationPermission = async (donorId) => {

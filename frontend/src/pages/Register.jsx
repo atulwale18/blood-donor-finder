@@ -109,7 +109,15 @@ const Register = () => {
   /* ================= RENDER ================= */
   return (
     <div style={styles.page}>
-      <div style={styles.card} className="card3d">
+      <div className="bannerSide">
+        <div style={styles.bannerOverlay}>
+          <h1 style={styles.bannerTitle}>Join the Lifesavers 🩺</h1>
+          <p style={styles.bannerSub}>Sign up today to become an essential part of our emergency response network.</p>
+        </div>
+      </div>
+
+      <div className="formSide">
+        <div style={styles.card} className="card3d">
         <h2 style={styles.title}>Create Account ✨</h2>
 
         <div style={styles.roleToggle}>
@@ -259,6 +267,7 @@ const Register = () => {
           <span style={styles.link} onClick={() => navigate("/")}>Login to Dashboard</span>
         </p>
       </div>
+      </div>
       <style>{animationCSS}</style>
     </div>
   );
@@ -267,7 +276,10 @@ const Register = () => {
 /* ================= STYLES ================= */
 
 const styles = {
-  page: { minHeight: "100vh", background: "linear-gradient(135deg, #0A192F, #172A45)", display: "flex", justifyContent: "center", alignItems: "center", padding: "40px 20px" },
+  page: { minHeight: "100vh", background: "#0A192F", display: "flex", alignItems: "stretch" },
+  bannerOverlay: { padding: "60px", background: "linear-gradient(to top, rgba(10,25,47,0.95) 0%, rgba(10,25,47,0.1) 100%)", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", boxSizing: "border-box" },
+  bannerTitle: { fontSize: "3.5rem", fontWeight: "800", marginBottom: "15px", textShadow: "0 2px 10px rgba(0,0,0,0.5)", lineHeight: "1.1" },
+  bannerSub: { fontSize: "1.2rem", opacity: 0.9, maxWidth: "500px", lineHeight: "1.6", textShadow: "0 2px 10px rgba(0,0,0,0.5)" },
   card: { width: "100%", maxWidth: 650, padding: "40px", background: "rgba(255,255,255,0.98)", backdropFilter: "blur(15px)", borderRadius: "24px", boxShadow: "0 25px 50px rgba(0,0,0,0.4)" },
   title: { textAlign: "center", marginBottom: "30px", fontSize: "2rem", color: "#0d47a1", fontWeight: "800" },
   roleToggle: { display: "flex", gap: "10px", marginBottom: "30px", background: "#f5f5f5", padding: "6px", borderRadius: "14px" },
@@ -288,6 +300,10 @@ const styles = {
 };
 
 const animationCSS = `
+.bannerSide { flex: 1.2; background: url('https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat; display: flex; flex-direction: column; position: relative; }
+.formSide { flex: 1.8; display: flex; justify-content: center; align-items: center; padding: 40px; background: linear-gradient(135deg, #0A192F, #172A45); max-height: 100vh; overflow-y: auto; }
+@media (max-width: 900px) { .bannerSide { display: none !important; } .formSide { padding: 20px; } }
+
 .card3d { animation: fadeIn 0.6s ease-out; }
 input:focus, select:focus { border-color: #1565c0 !important; box-shadow: 0 0 8px rgba(21, 101, 192, 0.2); }
 .fadeSection { animation: slideDown 0.4s ease-out; }

@@ -122,7 +122,15 @@ const Login = () => {
 
   return (
     <div style={styles.page}>
-      <div style={styles.card} className="card3d">
+      <div className="bannerSide">
+        <div style={styles.bannerOverlay}>
+          <h1 style={styles.bannerTitle}>Every Drop Counts 🩸</h1>
+          <p style={styles.bannerSub}>Donating blood is an act of solidarity. Join the effort and save lives.</p>
+        </div>
+      </div>
+
+      <div className="formSide">
+        <div style={styles.card} className="card3d">
         
         {/* IMPROVED HEADER */}
         <h2 style={styles.title}>Welcome Back 👋</h2>
@@ -217,6 +225,7 @@ const Login = () => {
           </div>
         </div>
       </div>
+      </div>
 
       <style>{animationCSS}</style>
     </div>
@@ -228,11 +237,33 @@ const Login = () => {
 const styles = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(135deg, #0A192F, #172A45)",
+    background: "#0A192F",
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: "20px"
+    alignItems: "stretch",
+  },
+  bannerOverlay: {
+    padding: "60px",
+    background: "linear-gradient(to top, rgba(10,25,47,0.95) 0%, rgba(10,25,47,0.1) 100%)",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-end",
+    color: "#fff",
+    boxSizing: "border-box"
+  },
+  bannerTitle: {
+    fontSize: "3.5rem",
+    fontWeight: "800",
+    marginBottom: "15px",
+    textShadow: "0 2px 10px rgba(0,0,0,0.5)",
+    lineHeight: "1.1"
+  },
+  bannerSub: {
+    fontSize: "1.2rem",
+    opacity: 0.9,
+    maxWidth: "500px",
+    lineHeight: "1.6",
+    textShadow: "0 2px 10px rgba(0,0,0,0.5)"
   },
   card: {
     width: "100%",
@@ -359,6 +390,28 @@ const styles = {
 /* ================= ANIMATION ================= */
 
 const animationCSS = `
+.bannerSide {
+  flex: 1.2;
+  background: url('https://images.unsplash.com/photo-1615461066841-6116e61058f4?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.formSide {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  background: linear-gradient(135deg, #0A192F, #172A45);
+}
+
+@media (max-width: 900px) {
+  .bannerSide { display: none !important; }
+  .formSide { padding: 20px; }
+}
+
 .card3d {
   animation: fadeIn 0.8s ease-out;
 }

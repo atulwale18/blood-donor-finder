@@ -37,19 +37,40 @@ const MAX_DONORS = 5;
 ========================= */
 const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) => {
   for (const donor of donors) {
-    // 1. Send Push Notification via Firebase
+    // 1. Send Push Notification via Firebase (High-Priority OS Popup)
     if (donor.fcm_token) {
       const message = {
         notification: {
-          title: "🩸 Blood Emergency",
-          body: `${bloodGroup} needed at ${hospitalName}`
+          title: "🚨 Someone needs a blood donation near you",
+          body: `Urgent! ${bloodGroup} blood is needed at ${hospitalName}. Please help save a life.`,
+          image: "https://ai-powered-blood-donor-finder.vercel.app/logo512.png"
+        },
+        android: {
+          priority: "high",
+          notification: {
+            channelId: "urgent_blood_alerts",
+            defaultSound: true,
+            defaultVibrateTimings: true,
+            notificationCount: 1,
+            clickAction: "FLUTTER_NOTIFICATION_CLICK"
+          }
+        },
+        webpush: {
+          headers: {
+            Urgency: "high"
+          },
+          notification: {
+            requireInteraction: true,
+            icon: "https://ai-powered-blood-donor-finder.vercel.app/logo192.png",
+            vibrate: [200, 100, 200, 100, 200]
+          }
         },
         token: donor.fcm_token
       };
 
       try {
         admin.messaging().send(message)
-          .then(() => console.log("Push Notification sent to donor:", donor.donor_id))
+          .then(() => console.log("High-Priority Push Notification sent to donor:", donor.donor_id))
           .catch((err) => console.log("Push Notification error:", err.message));
       } catch (err) {
         console.log("Push Notification Exception:", err.message);

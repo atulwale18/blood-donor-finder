@@ -137,8 +137,8 @@ const HospitalDashboard = () => {
                 onClick={() => navigate("/profile-update")} 
                 style={{ cursor: 'pointer', fontSize: '18px', opacity: 0.7, transition: '0.2s' }}
                 title="Update Profile & Settings"
-                onMouseOver={(e) => e.target.style.opacity = 1}
-                onMouseOut={(e) => e.target.style.opacity = 0.7}
+                
+                
               >
                 ⚙️
               </span>
@@ -164,8 +164,8 @@ const HospitalDashboard = () => {
             </select>
 
             <button style={styles.emergencyBtn} onClick={sendEmergency}
-                    onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
-                    onMouseOut={(e) => e.target.style.transform = 'scale(1)'}>
+                    
+                    >
               Broadcast Request
             </button>
           </div>
@@ -213,6 +213,10 @@ const HospitalDashboard = () => {
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <a href={`tel:${b.mobile}`} style={styles.callBtn}>
                       📞 Call
+                    </a>
+
+                    <a href={`https://wa.me/91${b.mobile}`} target="_blank" rel="noreferrer" style={{...styles.callBtn, background: '#25D366', color: '#fff'}}>
+                      💬 WhatsApp
                     </a>
 
                     <a
@@ -279,8 +283,8 @@ const HospitalDashboard = () => {
                     <button
                       style={styles.outlineBtn}
                       onClick={() => fetchNotifiedDonors(e.request_id)}
-                      onMouseOver={(e) => e.target.style.background = '#e0e0e0'}
-                      onMouseOut={(e) => e.target.style.background = '#f5f5f5'}
+                      
+                      
                     >
                       📡 View Notified Donors Around You
                     </button>
@@ -292,8 +296,10 @@ const HospitalDashboard = () => {
                     {(notifiedDonors[e.request_id] || []).map((d, i) => (
                       <div key={i} style={styles.donorCard}>
                         <p style={{ margin: '0 0 5px 0', color: '#333' }}><b>👤 {d.name}</b></p>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#555' }}>
-                          <span>📞 {d.mobile}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#555', alignItems: 'center' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>📞 {d.mobile}
+                            <a href={`https://wa.me/91${d.mobile}`} target="_blank" rel="noreferrer" style={{color: '#25D366', textDecoration: 'none', fontSize: '1.2rem'}} title="Message on WhatsApp">💬</a>
+                          </span>
                           <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>🩸 HB: {d.hemoglobin ? `${d.hemoglobin} g/dL` : 'N/A'}</span>
                           <span style={{ color: '#1565c0', fontWeight: 'bold' }}>📍 {d.distance_km != null ? Number(d.distance_km).toFixed(2) : (d.distance != null ? Number(d.distance).toFixed(2) : 'N/A')} km</span>
                         </div>
@@ -306,13 +312,15 @@ const HospitalDashboard = () => {
                   <div style={{ marginTop: '15px', padding: '15px', background: '#fff8e1', borderRadius: '12px', border: '1px solid #ffe082' }}>
                     <h5 style={{ margin: '0 0 10px 0', color: '#f57f17' }}>⚡ Fast Response Received!</h5>
                     <p style={{ margin: '5px 0', color: '#424242' }}><b>Donor:</b> {e.donor_name}</p>
-                    <p style={{ margin: '5px 0', color: '#424242' }}><b>Contact:</b> {e.donor_mobile}</p>
+                    <p style={{ margin: '5px 0', color: '#424242' }}><b>Contact:</b> {e.donor_mobile} 
+                      <a href={`https://wa.me/91${e.donor_mobile}`} target="_blank" rel="noreferrer" style={{marginLeft: '10px', color: '#25D366', textDecoration: 'none', fontSize: '1.1rem'}} title="Message Donor on WhatsApp">💬 WhatsApp</a>
+                    </p>
 
                     <button
                       style={styles.completeBtn}
                       onClick={() => completeDonation(e.request_id)}
-                      onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
-                      onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                      
+                      
                     >
                       ✅ Mark Donation as Completed
                     </button>
@@ -335,8 +343,8 @@ const HospitalDashboard = () => {
             localStorage.clear();
             navigate("/");
           }}
-          onMouseOver={(e) => e.target.style.background = '#b71c1c'}
-          onMouseOut={(e) => e.target.style.background = '#111'}
+          
+          
         >
           Logout & Exit Dashboard
         </button>

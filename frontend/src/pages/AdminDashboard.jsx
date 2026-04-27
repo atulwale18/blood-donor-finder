@@ -206,8 +206,14 @@ const AdminDashboard = () => {
         return (
           <Table
             title="🧍 Donors"
-            headers={["Name", "Blood", "Mobile", "HB Score"]}
-            rows={donors.map(d => [d.name, d.blood_group, d.mobile, d.hemoglobin ? `${d.hemoglobin} g/dL` : "N/A"])}
+            headers={["Name", "Blood", "Mobile", "HB Score", "Action"]}
+            rows={donors.map(d => [
+              d.name, 
+              d.blood_group, 
+              d.mobile, 
+              d.hemoglobin ? `${d.hemoglobin} g/dL` : "N/A",
+              <a href={`https://wa.me/91${d.mobile}`} target="_blank" rel="noreferrer" style={{color: '#25D366', fontWeight: 'bold', textDecoration: 'none'}}>💬 WhatsApp</a>
+            ])}
           />
         );
 
@@ -215,8 +221,12 @@ const AdminDashboard = () => {
         return (
           <Table
             title="🏥 Hospitals"
-            headers={["Hospital", "Mobile"]}
-            rows={hospitals.map(h => [h.hospital_name, h.mobile])}
+            headers={["Hospital", "Mobile", "Action"]}
+            rows={hospitals.map(h => [
+              h.hospital_name, 
+              h.mobile,
+              <a href={`https://wa.me/91${h.mobile}`} target="_blank" rel="noreferrer" style={{color: '#25D366', fontWeight: 'bold', textDecoration: 'none'}}>💬 WhatsApp</a>
+            ])}
           />
         );
 

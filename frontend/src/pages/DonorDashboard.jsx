@@ -322,8 +322,8 @@ const DonorDashboard = () => {
                 onClick={() => navigate("/profile-update")} 
                 style={{ cursor: 'pointer', fontSize: '18px', opacity: 0.7, transition: '0.2s' }}
                 title="Update Profile & Settings"
-                onMouseOver={(e) => e.target.style.opacity = 1}
-                onMouseOut={(e) => e.target.style.opacity = 0.7}
+                
+                
               >
                 ⚙️
               </span>
@@ -404,8 +404,8 @@ const DonorDashboard = () => {
                       fetchEmergency();
                     });
                   }}
-                  onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
-                  onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                  
+                  
                 >
                   Confirm & Accept Request
                 </button>
@@ -415,8 +415,8 @@ const DonorDashboard = () => {
                   onClick={() =>
                     window.open(`https://www.google.com/maps?q=${emergency.h_lat},${emergency.h_lon}`)
                   }
-                  onMouseOver={(e) => e.target.style.transform = 'scale(1.02)'}
-                  onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                  
+                  
                 >
                   📍 Open Live Map
                 </button>
@@ -428,8 +428,8 @@ const DonorDashboard = () => {
         <button 
           style={styles.logout} 
           onClick={() => navigate("/")}
-          onMouseOver={(e) => e.target.style.background = '#b71c1c'}
-          onMouseOut={(e) => e.target.style.background = '#d32f2f'}
+          
+          
         >
           Logout
         </button>

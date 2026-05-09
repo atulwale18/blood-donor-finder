@@ -3,31 +3,7 @@ const admin = require("../config/firebase-admin");
 const db = require("../config/db");
 const transporter = require("../config/mailer");
 const PDFDocument = require("pdfkit");
-
-let twilioClient;
-if ((process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID) && process.env.TWILIO_AUTH_TOKEN) {
-  const sid = process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID;
-  twilioClient = require('twilio')(sid, process.env.TWILIO_AUTH_TOKEN);
-}
-
-const sendWhatsApp = async (mobile, message) => {
-  if (!twilioClient) {
-    console.log("Twilio is not configured. Skipping WhatsApp message to", mobile);
-    return;
-  }
-  if (!mobile) return;
-  try {
-    const toNum = mobile.startsWith('+') ? mobile : `+91${mobile}`;
-    await twilioClient.messages.create({
-      from: `whatsapp:${process.env.TWILIO_WHATSAPP_NUMBER || '+14155238886'}`,
-      to: `whatsapp:${toNum}`,
-      body: message
-    });
-    console.log("WhatsApp message sent to:", mobile);
-  } catch (err) {
-    console.log("WhatsApp error:", err);
-  }
-};
+const { sendWhatsApp } = require("../utils/whatsapp");
 
 const MAX_DISTANCE = 15;
 const MAX_DONORS = 5;
@@ -470,6 +446,19 @@ exports.acceptEmergency = (req, res) => {
       }
 
       res.json({ message: "Accepted" });
+
+      // Send WhatsApp to the Hospital to let them know
+      db.query(
+        "SELECT h.mobile, h.hospital_name, d.name AS donor_name, d.mobile AS donor_mobile, d.blood_group FROM hospitals h JOIN donors d ON d.donor_id = ? WHERE h.hospital_id = (SELECT hospital_id FROM emergency_requests WHERE request_id = ?)",
+        [donor_id, request_id],
+        (errH, hRows) => {
+          if (!errH && hRows.length > 0) {
+            const hospital = hRows[0];
+            const msg = `✅ *Emergency Accepted!*\n\nDonor *${hospital.donor_name}* (${hospital.blood_group}) has accepted your emergency request at ${hospital.hospital_name}.\n\nPlease contact them immediately at: ${hospital.donor_mobile}\n\n- Blood Donor Finder`;
+            if (hospital.mobile) sendWhatsApp(hospital.mobile, msg);
+          }
+        }
+      );
 
       // Notify other notified donors that request was accepted
       const notifySql = `

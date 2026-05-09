@@ -4,6 +4,7 @@ const db = require("../config/db");
 const axios = require("axios");
 const twilio = require("twilio");
 const transporter = require("../config/mailer");
+const { sendWhatsApp } = require("../utils/whatsapp");
 
 /* =====================
    TWILIO CLIENT
@@ -132,6 +133,7 @@ exports.register = async (req, res) => {
             db.query(`DELETE FROM users WHERE user_id = ?`, [user_id]);
             return res.status(500).json({ message: "Registration failed: Invalid donor data", error: err.message });
           }
+          if (mobile) sendWhatsApp(mobile, `🩸 Welcome to Blood Donor Finder, ${name}!\n\nThank you for registering as a donor. Your commitment can save lives.`);
           res.json({ message: "Donor registered successfully" });
         }
       );

@@ -280,7 +280,7 @@ const styles = {
   bannerOverlay: { padding: "60px", background: "linear-gradient(to top, rgba(10,25,47,0.95) 0%, rgba(10,25,47,0.1) 100%)", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", color: "#fff", boxSizing: "border-box" },
   bannerTitle: { fontSize: "3.5rem", fontWeight: "800", marginBottom: "15px", textShadow: "0 2px 10px rgba(0,0,0,0.5)", lineHeight: "1.1" },
   bannerSub: { fontSize: "1.2rem", opacity: 0.9, maxWidth: "500px", lineHeight: "1.6", textShadow: "0 2px 10px rgba(0,0,0,0.5)" },
-  card: { width: "100%", maxWidth: 650, padding: "40px", background: "rgba(255,255,255,0.98)", backdropFilter: "blur(15px)", borderRadius: "24px", boxShadow: "0 10px 40px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.02)" },
+  card: { width: "100%", maxWidth: 650, padding: "40px", background: "rgba(255,255,255,0.98)", backdropFilter: "blur(15px)", borderRadius: "24px", boxShadow: "0 25px 50px rgba(0,0,0,0.4)" },
   title: { textAlign: "center", marginBottom: "30px", fontSize: "2rem", color: "#0d47a1", fontWeight: "800" },
   roleToggle: { display: "flex", gap: "10px", marginBottom: "30px", background: "#f5f5f5", padding: "6px", borderRadius: "14px" },
   roleActive: { flex: 1, padding: "12px", background: "#fff", color: "#d32f2f", border: "none", borderRadius: "10px", fontWeight: "bold", boxShadow: "0 4px 10px rgba(0,0,0,0.1)", fontSize: "1rem" },
@@ -293,7 +293,7 @@ const styles = {
   input: { width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ddd", outline: "none", transition: "0.3s", fontSize: "0.95rem", background: "#fff" },
   locationBtn: { width: "100%", padding: "12px", background: "#f5f5f5", color: "#333", border: "1px solid #ddd", borderRadius: "10px", cursor: "pointer", fontWeight: "bold", transition: "0.2s" },
   warningAlert: { background: "#fff3cd", color: "#856404", padding: "12px", borderRadius: "10px", fontSize: "0.9rem", fontWeight: "bold", marginBottom: "15px", borderLeft: "4px solid #ffc107" },
-  registerBtn: { width: "100%", padding: "16px", background: "#DC2626", color: "#fff", border: "none", borderRadius: "12px", cursor: "pointer", fontSize: "1.1rem", fontWeight: "bold", boxShadow: "0 8px 20px rgba(229, 57, 53, 0.4)", transition: "0.3s" },
+  registerBtn: { width: "100%", padding: "16px", background: "linear-gradient(135deg, #e53935, #b71c1c)", color: "#fff", border: "none", borderRadius: "12px", cursor: "pointer", fontSize: "1.1rem", fontWeight: "bold", boxShadow: "0 8px 20px rgba(229, 57, 53, 0.4)", transition: "0.3s" },
   disabledBtn: { width: "100%", padding: "16px", background: "#ccc", color: "#888", border: "none", borderRadius: "12px", fontSize: "1.1rem", fontWeight: "bold", cursor: "not-allowed" },
   footer: { marginTop: "25px", textAlign: "center", fontSize: "0.95rem", color: "#555" },
   link: { color: "#1565c0", cursor: "pointer", fontWeight: "bold", textDecoration: "underline" }
@@ -301,7 +301,7 @@ const styles = {
 
 const animationCSS = `
 .bannerSide { flex: 1.2; background: url('https://images.unsplash.com/photo-1579154204601-01588f351e67?q=80&w=2000&auto=format&fit=crop') center/cover no-repeat; display: flex; flex-direction: column; position: relative; }
-.formSide { flex: 1.8; display: flex; justify-content: center; align-items: center; padding: 40px; background: "#F4F7FE"; min-height: 100vh; }
+.formSide { flex: 1.8; display: flex; justify-content: center; align-items: center; padding: 40px; background: linear-gradient(135deg, #0A192F, #172A45); min-height: 100vh; }
 @media (max-width: 900px) { .bannerSide { display: none !important; } .formSide { padding: 20px; } }
 
 .card3d { animation: fadeIn 0.6s ease-out; }

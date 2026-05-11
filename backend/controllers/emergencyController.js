@@ -227,6 +227,7 @@ exports.createEmergency = (req, res) => {
           JOIN users u ON u.user_id = d.user_id
           JOIN hospitals h ON h.hospital_id = ?
           WHERE d.blood_group IN (?)
+            AND d.trust_score >= 0
             AND d.latitude IS NOT NULL
             AND d.longitude IS NOT NULL
             AND d.is_available = 'Available'
@@ -589,9 +590,9 @@ exports.completeEmergency = (req, res) => {
         if (!err && details.length > 0) {
           const info = details[0];
           
-          // Update Donor Status
+          // Update Donor Status & Add Trust Points (+50)
           db.query(
-            `UPDATE donors SET is_available = 'Donated Recently', last_donation_date = CURDATE() WHERE donor_id = ?`,
+            `UPDATE donors SET is_available = 'Donated Recently', last_donation_date = CURDATE(), trust_score = trust_score + 50 WHERE donor_id = ?`,
             [info.donor_id]
           );
 
@@ -739,6 +740,41 @@ exports.completeEmergency = (req, res) => {
       res.json({ message: "Completed and Certificate Sent" });
     }
   );
+};
+
+/* =========================
+   REPORT NO-SHOW (DONOR PENALTY)
+========================= */
+exports.reportNoShow = (req, res) => {
+  const { request_id } = req.body;
+
+  if (!request_id) {
+    return res.status(400).json({ message: "Request ID required" });
+  }
+
+  // 1. Get the donor who accepted it
+  db.query(`SELECT accepted_donor_id FROM emergency_requests WHERE request_id = ? AND status = 'accepted'`, [request_id], (err, reqRows) => {
+    if (err || reqRows.length === 0 || !reqRows[0].accepted_donor_id) {
+      return res.status(400).json({ message: "Invalid request or no donor accepted yet." });
+    }
+    
+    const donorId = reqRows[0].accepted_donor_id;
+
+    // 2. Penalize Donor (-100 points)
+    db.query(`UPDATE donors SET trust_score = trust_score - 100 WHERE donor_id = ?`, [donorId]);
+
+    // 3. Revert emergency to pending
+    db.query(
+      `
+      UPDATE emergency_requests
+      SET status = 'pending',
+          accepted_donor_id = NULL
+      WHERE request_id = ?
+      `,
+      [request_id],
+      () => res.json({ message: "Donor penalized (-100 Trust Score) and request reverted to pending." })
+    );
+  });
 };
 
 console.log("EXPORTS:", Object.keys(module.exports));

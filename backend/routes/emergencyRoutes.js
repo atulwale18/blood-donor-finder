@@ -37,6 +37,7 @@ router.get(
 router.post("/accept", emergencyController.acceptEmergency);
 router.post("/decline", emergencyController.declineEmergency);
 router.post("/complete", emergencyController.completeEmergency);
+router.post("/report-no-show", emergencyController.reportNoShow);
 
 
 

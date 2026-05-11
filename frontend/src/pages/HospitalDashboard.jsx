@@ -360,224 +360,109 @@ const HospitalDashboard = () => {
 const styles = {
   page: {
     minHeight: "100vh",
-    /* Premium UX gradient with high-quality real-life medical/doctor photography overlay */
-    background: "linear-gradient(135deg, rgba(10,25,47,0.93) 0%, rgba(23,42,69,0.88) 50%, rgba(13,71,161,0.82) 100%), url('https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=2000&auto=format&fit=crop') center/cover fixed",
+    background: "#F4F7FE", /* Clean modern app background */
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    padding: "20px"
+    padding: "20px",
+    fontFamily: "'Inter', 'Roboto', sans-serif"
   },
   spinner: {
-    width: "60px",
-    height: "60px",
-    border: "6px solid rgba(255,255,255,0.2)",
-    borderTop: "6px solid #4fc3f7",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite"
+    width: "50px", height: "50px",
+    border: "4px solid #e0e0e0", borderTop: "4px solid #2563EB",
+    borderRadius: "50%", animation: "spin 1s linear infinite"
   },
   card: {
-    /* Mobile responsive max-width */
-    width: "100%",
-    maxWidth: "520px",
-    /* Premium Glassmorphism */
-    background: "rgba(255, 255, 255, 0.95)",
-    backdropFilter: "blur(12px)",
-    padding: "35px",
+    width: "100%", maxWidth: "550px",
+    background: "#FFFFFF",
+    padding: "40px",
     borderRadius: "24px",
-    boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
-    transition: "transform 0.3s ease"
+    boxShadow: "0 10px 40px rgba(0,0,0,0.05)", /* Ultra soft shadow */
+    border: "1px solid rgba(0,0,0,0.02)"
   },
   title: { 
-    textAlign: "center", 
-    marginBottom: "30px",
-    color: "#0d47a1",
-    fontWeight: "800",
-    fontSize: "1.8rem"
+    textAlign: "center", marginBottom: "30px", color: "#111827",
+    fontWeight: "800", fontSize: "1.7rem", letterSpacing: "-0.5px"
   },
   sectionTitle: {
-    margin: "0 0 15px 0",
-    color: "#d32f2f",
-    fontSize: "1.2rem",
-    borderBottom: "2px solid #eee",
-    paddingBottom: "10px"
+    margin: "0 0 15px 0", color: "#111827", fontSize: "1.1rem",
+    fontWeight: "700", borderBottom: "1px solid #F3F4F6", paddingBottom: "10px"
   },
-  profile: { display: "flex", gap: "20px", marginBottom: "30px", alignItems: "center", borderBottom: "1px solid #eee", paddingBottom: "20px" },
+  profile: { display: "flex", gap: "15px", marginBottom: "30px", alignItems: "center", borderBottom: "1px solid #F3F4F6", paddingBottom: "20px" },
   avatar: {
-    width: "70px",
-    height: "70px",
-    borderRadius: "50%",
-    background: "linear-gradient(135deg, #1976d2, #0d47a1)",
-    color: "#fff",
-    fontSize: "30px",
-    fontWeight: "bold",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    boxShadow: "0 4px 15px rgba(13, 71, 161, 0.3)"
+    width: "60px", height: "60px", borderRadius: "20px",
+    background: "#2563EB", color: "#fff", fontSize: "24px",
+    fontWeight: "bold", display: "flex", justifyContent: "center", alignItems: "center",
+    boxShadow: "0 4px 15px rgba(37, 99, 235, 0.2)"
   },
   section: { marginBottom: "30px" },
   select: { 
-    flex: 1, 
-    padding: "14px", 
-    borderRadius: "12px",
-    border: "1px solid #ccc",
-    fontSize: "1rem",
-    background: "#f9f9f9",
-    outline: "none"
+    flex: 1, padding: "14px", borderRadius: "14px", border: "1px solid #E5E7EB",
+    fontSize: "1rem", background: "#F9FAFB", outline: "none", color: "#111827", fontWeight: "500"
   },
   emergencyBtn: {
-    flex: 2,
-    padding: "14px",
-    background: "linear-gradient(135deg, #e53935, #c62828)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "12px",
-    fontWeight: "bold",
-    fontSize: "1rem",
-    cursor: "pointer",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    boxShadow: "0 4px 15px rgba(211, 47, 47, 0.4)"
+    flex: 2, padding: "14px", background: "#DC2626", color: "#fff",
+    border: "none", borderRadius: "14px", fontWeight: "700", fontSize: "1rem",
+    cursor: "pointer", transition: "all 0.2s", boxShadow: "0 4px 12px rgba(220, 38, 38, 0.2)"
   },
   bloodBankCard: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "16px",
-    borderRadius: "14px",
-    background: "#f8f9fa",
-    marginBottom: "12px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    padding: "16px", borderRadius: "16px", background: "#F9FAFB", marginBottom: "12px",
+    border: "1px solid #F3F4F6", transition: "0.2s"
   },
   nearestBadge: {
-    marginLeft: "10px",
-    fontSize: "0.75rem",
-    background: "#2e7d32",
-    color: "#fff",
-    padding: "4px 8px",
-    borderRadius: "20px",
-    verticalAlign: "middle"
+    marginLeft: "10px", fontSize: "0.7rem", background: "#10B981", color: "#fff",
+    padding: "4px 8px", borderRadius: "20px", fontWeight: "700"
   },
   callBtn: {
-    background: "#2e7d32",
-    color: "#fff",
-    padding: "8px 16px",
-    borderRadius: "8px",
-    textDecoration: "none",
-    fontSize: "0.9rem",
-    fontWeight: "bold",
-    textAlign: "center",
-    transition: "background 0.2s ease"
+    background: "#10B981", color: "#fff", padding: "8px 16px", borderRadius: "10px",
+    textDecoration: "none", fontSize: "0.85rem", fontWeight: "700", textAlign: "center"
   },
   mapBtn: {
-    background: "#1565c0",
-    color: "#fff",
-    padding: "8px 16px",
-    borderRadius: "8px",
-    textDecoration: "none",
-    fontSize: "0.9rem",
-    fontWeight: "bold",
-    textAlign: "center",
-    transition: "background 0.2s ease"
+    background: "#2563EB", color: "#fff", padding: "8px 16px", borderRadius: "10px",
+    textDecoration: "none", fontSize: "0.85rem", fontWeight: "700", textAlign: "center"
   },
-  distance: {
-    fontSize: "0.85rem",
-    color: "#666",
-    marginTop: "6px",
-    fontWeight: "500"
-  },
+  distance: { fontSize: "0.85rem", color: "#6B7280", marginTop: "6px", fontWeight: "500" },
   warning: {
-    color: "#b71c1c",
-    background: "rgba(211, 47, 47, 0.1)",
-    padding: "15px",
-    borderRadius: "12px",
-    fontSize: "0.95rem",
-    fontWeight: "bold"
+    color: "#B45309", background: "#FEF3C7", padding: "15px",
+    borderRadius: "14px", fontSize: "0.9rem", fontWeight: "600"
   },
   emergencyCard: {
-    borderRadius: "16px",
-    padding: "20px",
-    marginBottom: "20px",
-    background: "#fff",
-    boxShadow: "0 8px 25px rgba(0,0,0,0.06)",
-    transition: "transform 0.3s ease, box-shadow 0.3s ease"
+    borderRadius: "16px", padding: "20px", marginBottom: "15px",
+    background: "#fff", border: "1px solid #F3F4F6",
+    boxShadow: "0 4px 15px rgba(0,0,0,0.03)", transition: "all 0.2s"
   },
-  rowBetween: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "15px"
-  },
-  statusBadge: {
-    padding: "6px 14px",
-    borderRadius: "20px",
-    fontSize: "0.8rem",
-    fontWeight: "bold",
-    letterSpacing: "0.5px"
-  },
+  rowBetween: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" },
+  statusBadge: { padding: "6px 12px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "700" },
   outlineBtn: {
-    marginTop: "15px",
-    width: "100%",
-    padding: "12px",
-    background: "#f5f5f5",
-    color: "#424242",
-    border: "1px solid #e0e0e0",
-    borderRadius: "10px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "background 0.2s ease"
+    marginTop: "10px", width: "100%", padding: "12px", background: "#F9FAFB",
+    color: "#374151", border: "1px solid #E5E7EB", borderRadius: "12px",
+    fontWeight: "600", cursor: "pointer", transition: "0.2s"
   },
   donorCard: {
-    marginTop: "12px",
-    background: "#fafafa",
-    padding: "12px 16px",
-    borderRadius: "10px",
-    border: "1px solid #eee"
+    marginTop: "10px", background: "#F9FAFB", padding: "12px 16px",
+    borderRadius: "12px", border: "1px solid #F3F4F6"
   },
   completeBtn: {
-    marginTop: "15px",
-    width: "100%",
-    padding: "14px",
-    background: "linear-gradient(135deg, #43a047, #2e7d32)",
-    color: "#fff",
-    border: "none",
-    borderRadius: "12px",
-    fontWeight: "bold",
-    fontSize: "1.05rem",
-    cursor: "pointer",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    boxShadow: "0 4px 15px rgba(46, 125, 50, 0.4)"
+    marginTop: "15px", width: "100%", padding: "14px", background: "#10B981", color: "#fff",
+    border: "none", borderRadius: "14px", fontWeight: "700", fontSize: "1rem", cursor: "pointer"
   },
   logout: {
-    width: "100%",
-    padding: "16px",
-    background: "#111",
-    color: "#fff",
-    border: "none",
-    borderRadius: "14px",
-    fontWeight: "bold",
-    fontSize: "1.1rem",
-    cursor: "pointer",
-    transition: "background 0.2s ease",
-    marginTop: "10px"
+    width: "100%", padding: "16px", background: "#111827", color: "#fff",
+    border: "none", borderRadius: "14px", fontWeight: "700", fontSize: "1rem", cursor: "pointer", marginTop: "10px"
   },
-  muted: { color: "#757575", margin: "5px 0", fontSize: "0.9rem" },
-  dropIcon: { fontSize: "24px" }
+  muted: { color: "#6B7280", margin: "5px 0", fontSize: "0.85rem" },
+  dropIcon: { fontSize: "20px" }
 };
 
 const animationCSS = `
-.fadeIn { animation: fadeIn 0.5s ease-out forwards; }
-.emergencyCard:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+.fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+.emergencyBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3) !important; }
+.completeBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3) !important; }
+.outlineBtn:hover { background: #F3F4F6 !important; }
+.logout:hover { background: #000 !important; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 `;
 
 export default HospitalDashboard;

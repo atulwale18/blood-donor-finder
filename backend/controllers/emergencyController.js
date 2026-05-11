@@ -5,8 +5,25 @@ const transporter = require("../config/mailer");
 const PDFDocument = require("pdfkit");
 const { sendWhatsApp } = require("../utils/whatsapp");
 
-const MAX_DISTANCE = 15;
+const ABSOLUTE_MAX_DISTANCE = 50; // Dynamic expanding radius up to 50km
 const MAX_DONORS = 5;
+
+/* =========================
+   UNIVERSAL BLOOD MATCHING LOGIC
+========================= */
+const getCompatibleBloodGroups = (requestedGroup) => {
+  const compatibility = {
+    'A+': ['A+', 'A-', 'O+', 'O-'],
+    'O+': ['O+', 'O-'],
+    'B+': ['B+', 'B-', 'O+', 'O-'],
+    'AB+': ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+    'A-': ['A-', 'O-'],
+    'O-': ['O-'],
+    'B-': ['B-', 'O-'],
+    'AB-': ['AB-', 'A-', 'B-', 'O-']
+  };
+  return compatibility[requestedGroup] || [requestedGroup];
+};
 
 /* =========================
    FIREBASE, EMAIL & WHATSAPP NOTIFICATION
@@ -190,6 +207,8 @@ exports.createEmergency = (req, res) => {
         const hospitalName = hRows?.[0]?.hospital_name || "Nearby Hospital";
 
         // 🧠 AI / Smart Matching Enhancement (Multi-factor Intelligent Ranking)
+        const compatibleGroups = getCompatibleBloodGroups(blood_group);
+
         const knnSql = `
           SELECT
             d.donor_id,
@@ -221,7 +240,7 @@ exports.createEmergency = (req, res) => {
           FROM donors d
           JOIN users u ON u.user_id = d.user_id
           JOIN hospitals h ON h.hospital_id = ?
-          WHERE d.blood_group = ?
+          WHERE d.blood_group IN (?)
             AND d.latitude IS NOT NULL
             AND d.longitude IS NOT NULL
             AND d.is_available = 'Available'
@@ -237,7 +256,7 @@ exports.createEmergency = (req, res) => {
           LIMIT ?
         `;
 
-        db.query(knnSql, [hospital_id, blood_group, MAX_DONORS], async (err, donors) => {
+        db.query(knnSql, [hospital_id, compatibleGroups, MAX_DONORS], async (err, donors) => {
 
           if (err) {
             console.error("KNN donor error:", err);
@@ -248,7 +267,7 @@ exports.createEmergency = (req, res) => {
 
           donors.forEach((d) => {
 
-            if (d.distance <= MAX_DISTANCE) {
+            if (d.distance <= ABSOLUTE_MAX_DISTANCE) {
 
               validDonors.push(d);
 

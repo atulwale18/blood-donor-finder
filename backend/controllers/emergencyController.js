@@ -19,7 +19,7 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
         notification: {
           title: "🚨 Someone needs a blood donation near you",
           body: `Urgent! ${bloodGroup} blood is needed at ${hospitalName}. Please help save a life.`,
-          image: "https://ai-powered-blood-donor-finder.vercel.app/blood-icon-512.png"
+          image: "https://ai-powered-blood-donor-finder.vercel.app/bdf-logo-512.png"
         },
         android: {
           priority: "high",
@@ -37,7 +37,7 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
           },
           notification: {
             requireInteraction: true,
-            icon: "https://ai-powered-blood-donor-finder.vercel.app/blood-icon-192.png",
+            icon: "https://ai-powered-blood-donor-finder.vercel.app/bdf-logo-192.png",
             vibrate: [200, 100, 200, 100, 200]
           }
         },

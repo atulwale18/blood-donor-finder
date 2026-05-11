@@ -447,15 +447,23 @@ exports.acceptEmergency = (req, res) => {
 
       res.json({ message: "Accepted" });
 
-      // Send WhatsApp to the Hospital to let them know
+      // Send WhatsApp and Email to the Hospital to let them know
       db.query(
-        "SELECT h.mobile, h.hospital_name, d.name AS donor_name, d.mobile AS donor_mobile, d.blood_group FROM hospitals h JOIN donors d ON d.donor_id = ? WHERE h.hospital_id = (SELECT hospital_id FROM emergency_requests WHERE request_id = ?)",
+        "SELECT h.mobile, h.email, h.hospital_name, d.name AS donor_name, d.mobile AS donor_mobile, d.blood_group FROM hospitals h JOIN donors d ON d.donor_id = ? WHERE h.hospital_id = (SELECT hospital_id FROM emergency_requests WHERE request_id = ?)",
         [donor_id, request_id],
         (errH, hRows) => {
           if (!errH && hRows.length > 0) {
             const hospital = hRows[0];
             const msg = `✅ *Emergency Accepted!*\n\nDonor *${hospital.donor_name}* (${hospital.blood_group}) has accepted your emergency request at ${hospital.hospital_name}.\n\nPlease contact them immediately at: ${hospital.donor_mobile}\n\n- Blood Donor Finder`;
             if (hospital.mobile) sendWhatsApp(hospital.mobile, msg);
+            if (hospital.email) {
+              transporter.sendMail({
+                from: "Blood Donor Finder <blooddonorportal@gmail.com>",
+                to: hospital.email,
+                subject: "✅ Emergency Accepted!",
+                html: `<h2 style="color:#2e7d32">Emergency Accepted!</h2><p>Donor <b>${hospital.donor_name}</b> (${hospital.blood_group}) has accepted your emergency request.</p><p>Please contact them immediately at: <b>${hospital.donor_mobile}</b></p>`
+              }).catch(e => console.log("Email error:", e.message));
+            }
           }
         }
       );

@@ -134,6 +134,16 @@ exports.register = async (req, res) => {
             return res.status(500).json({ message: "Registration failed: Invalid donor data", error: err.message });
           }
           if (mobile) sendWhatsApp(mobile, `🩸 Welcome to Blood Donor Finder, ${name}!\n\nThank you for registering as a donor. Your commitment can save lives.`);
+          
+          if (email) {
+            transporter.sendMail({
+              from: "Blood Donor Finder <blooddonorportal@gmail.com>",
+              to: email,
+              subject: "🩸 Welcome to Blood Donor Finder!",
+              html: `<h2>Welcome, ${name}!</h2><p>Thank you for registering as a blood donor. Your commitment can save lives in your community!</p>`
+            }).catch(e => console.log("Email error:", e.message));
+          }
+
           res.json({ message: "Donor registered successfully" });
         }
       );

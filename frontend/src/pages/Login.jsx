@@ -271,7 +271,7 @@ const styles = {
     padding: "40px 30px",
     background: "rgba(255,255,255,0.98)",
     borderRadius: "24px",
-    boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
+    boxShadow: "0 10px 40px rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.02)",
     textAlign: "center"
   },
   title: { margin: "0 0 5px 0", fontSize: "1.8rem", color: "#1a1a1a" },
@@ -339,7 +339,7 @@ const styles = {
   btn: {
     width: "100%",
     padding: "16px",
-    background: "linear-gradient(135deg, #e53935, #b71c1c)",
+    background: "#DC2626",
     color: "#fff",
     border: "none",
     borderRadius: "12px",
@@ -347,7 +347,7 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
     transition: "all 0.3s ease",
-    boxShadow: "0 6px 15px rgba(229,57,53,0.3)",
+    boxShadow: "0 4px 12px rgba(220, 38, 38, 0.2)",
     marginTop: "5px"
   },
   btnLoading: {
@@ -404,7 +404,7 @@ const animationCSS = `
   justify-content: center;
   align-items: center;
   padding: 40px;
-  background: linear-gradient(135deg, #0A192F, #172A45);
+  background: "#F4F7FE";
 }
 
 @media (max-width: 900px) {

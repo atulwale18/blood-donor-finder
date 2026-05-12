@@ -11,7 +11,9 @@ const app = express();
 /* =====================
    MIDDLEWARE
 ===================== */
-app.use(helmet()); // Sets secure HTTP headers (XSS, Content Security Policy, etc.)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+})); // Sets secure HTTP headers, modified to allow cross-origin images
 app.use(cors());
 app.use(express.json());
 

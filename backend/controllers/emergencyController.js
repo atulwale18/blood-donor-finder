@@ -321,13 +321,14 @@ exports.getEmergencyForDonor = (req, res) => {
           AND er.donor_visible = 1
           AND (
             (er.status = 'pending' AND er.donor_expire_at > NOW())
-            OR er.status = 'accepted'
+            OR (er.status = 'accepted' AND er.accepted_donor_id = ?)
+            OR (er.status = 'accepted' AND er.accepted_donor_id != ? AND er.created_at >= NOW() - INTERVAL 1 HOUR)
           )
         ORDER BY er.created_at DESC
         LIMIT 1
       `;
 
-      db.query(sql, [donorId], (err2, rows) => {
+      db.query(sql, [donorId, donorId, donorId], (err2, rows) => {
 
         if (err2 || rows.length === 0) return res.json(null);
 

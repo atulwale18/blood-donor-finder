@@ -50,7 +50,7 @@ const HospitalDashboard = () => {
         `${process.env.REACT_APP_API_URL || "https://blood-donor-backend.onrender.com"}/api/emergency/hospital/${hospital.hospital_id}`
       )
       .then((res) => setEmergencies(res.data || []))
-      .catch(() => {});
+      .catch(() => { });
   }, [hospital]);
 
   useEffect(() => {
@@ -69,7 +69,7 @@ const HospitalDashboard = () => {
           [requestId]: res.data || []
         }))
       )
-      .catch(() => {});
+      .catch(() => { });
   };
 
   /* =====================
@@ -133,12 +133,12 @@ const HospitalDashboard = () => {
           <div style={{ flex: 1 }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 8px 0', fontSize: '1.4rem', color: '#1a1a1a' }}>
               {hospital.hospital_name}
-              <span 
-                onClick={() => navigate("/profile-update")} 
+              <span
+                onClick={() => navigate("/profile-update")}
                 style={{ cursor: 'pointer', fontSize: '18px', opacity: 0.7, transition: '0.2s' }}
                 title="Update Profile & Settings"
-                
-                
+
+
               >
                 ⚙️
               </span>
@@ -164,8 +164,8 @@ const HospitalDashboard = () => {
             </select>
 
             <button style={styles.emergencyBtn} onClick={sendEmergency}
-                    
-                    >
+
+            >
               Broadcast Request
             </button>
           </div>
@@ -173,7 +173,7 @@ const HospitalDashboard = () => {
 
         {/* 🏦 NEARBY BLOOD BANKS */}
         <div style={styles.section}>
-          <h4 style={{...styles.sectionTitle, color: '#1565c0'}}>🏦 Nearby Blood Banks</h4>
+          <h4 style={{ ...styles.sectionTitle, color: '#1565c0' }}>🏦 Nearby Blood Banks</h4>
 
           {bloodBanks.length === 0 ? (
             <div style={styles.warning}>
@@ -215,7 +215,7 @@ const HospitalDashboard = () => {
                       📞 Call
                     </a>
 
-                    <a href={`https://wa.me/91${b.mobile}`} target="_blank" rel="noreferrer" style={{...styles.callBtn, background: '#25D366', color: '#fff'}}>
+                    <a href={`https://wa.me/91${b.mobile}`} target="_blank" rel="noreferrer" style={{ ...styles.callBtn, background: '#25D366', color: '#fff' }}>
                       💬 WhatsApp
                     </a>
 
@@ -239,7 +239,7 @@ const HospitalDashboard = () => {
           <h4 style={styles.sectionTitle}>📌 Live Emergency Requests</h4>
 
           {emergencies.length === 0 ? (
-            <div style={{...styles.warning, background: '#f5f5f5', color: '#757575', textAlign: 'center'}}>
+            <div style={{ ...styles.warning, background: '#f5f5f5', color: '#757575', textAlign: 'center' }}>
               No active emergency requests found.
             </div>
           ) : (
@@ -256,22 +256,27 @@ const HospitalDashboard = () => {
                 <div style={styles.rowBetween}>
                   <div style={{ display: "flex", gap: 8, alignItems: 'center' }}>
                     <span style={styles.dropIcon}>🩸</span>
-                    <b style={{ color: '#333' }}>Blood Group: <span style={{color: '#d32f2f', fontSize: '1.1rem'}}>{e.blood_group}</span></b>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
+                      <b style={{ color: '#333' }}>Blood Group: <span style={{ color: '#d32f2f', fontSize: '1.1rem' }}>{e.blood_group}</span></b>
+                      <span style={{ fontSize: '0.8rem', color: '#757575', marginTop: '2px' }}>
+                        🕒 {new Date(e.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute:'2-digit', day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
                   </div>
 
                   {/* 🟢🟡🔴 STATUS BADGES */}
                   <span
                     style={{
                       ...styles.statusBadge,
-                      background: 
-                        e.status === "pending" ? "rgba(244, 67, 54, 0.15)" : 
-                        e.status === "accepted" ? "rgba(255, 152, 0, 0.15)" : "rgba(76, 175, 80, 0.15)",
-                      color: 
-                        e.status === "pending" ? "#d32f2f" : 
-                        e.status === "accepted" ? "#f57c00" : "#2e7d32",
-                      border: 
-                        e.status === "pending" ? "1px solid rgba(244, 67, 54, 0.3)" : 
-                        e.status === "accepted" ? "1px solid rgba(255, 152, 0, 0.3)" : "1px solid rgba(76, 175, 80, 0.3)"
+                      background:
+                        e.status === "pending" ? "rgba(244, 67, 54, 0.15)" :
+                          e.status === "accepted" ? "rgba(255, 152, 0, 0.15)" : "rgba(76, 175, 80, 0.15)",
+                      color:
+                        e.status === "pending" ? "#d32f2f" :
+                          e.status === "accepted" ? "#f57c00" : "#2e7d32",
+                      border:
+                        e.status === "pending" ? "1px solid rgba(244, 67, 54, 0.3)" :
+                          e.status === "accepted" ? "1px solid rgba(255, 152, 0, 0.3)" : "1px solid rgba(76, 175, 80, 0.3)"
                     }}
                   >
                     {e.status === "pending" ? "🔴 PENDING" : e.status === "accepted" ? "🟡 ACCEPTED" : "🟢 COMPLETED"}
@@ -283,8 +288,8 @@ const HospitalDashboard = () => {
                     <button
                       style={styles.outlineBtn}
                       onClick={() => fetchNotifiedDonors(e.request_id)}
-                      
-                      
+
+
                     >
                       📡 View Notified Donors Around You
                     </button>
@@ -301,7 +306,7 @@ const HospitalDashboard = () => {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#555', alignItems: 'center' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>📞 {d.mobile}
-                            <a href={`https://wa.me/91${d.mobile}`} target="_blank" rel="noreferrer" style={{color: '#25D366', textDecoration: 'none', fontSize: '1.2rem'}} title="Message on WhatsApp">💬</a>
+                            <a href={`https://wa.me/91${d.mobile}`} target="_blank" rel="noreferrer" style={{ color: '#25D366', textDecoration: 'none', fontSize: '1.2rem' }} title="Message on WhatsApp">💬</a>
                           </span>
                           <span style={{ color: '#d32f2f', fontWeight: 'bold' }}>🩸 HB: {d.hemoglobin ? `${d.hemoglobin} g/dL` : 'N/A'}</span>
                           <span style={{ color: '#1565c0', fontWeight: 'bold' }}>📍 {d.distance_km != null ? Number(d.distance_km).toFixed(2) : (d.distance != null ? Number(d.distance).toFixed(2) : 'N/A')} km</span>
@@ -315,21 +320,21 @@ const HospitalDashboard = () => {
                   <div style={{ marginTop: '15px', padding: '15px', background: '#fff8e1', borderRadius: '12px', border: '1px solid #ffe082' }}>
                     <h5 style={{ margin: '0 0 10px 0', color: '#f57f17' }}>⚡ Fast Response Received!</h5>
                     <p style={{ margin: '5px 0', color: '#424242' }}><b>Donor:</b> {e.donor_name}</p>
-                    <p style={{ margin: '5px 0', color: '#424242' }}><b>Contact:</b> {e.donor_mobile} 
-                      <a href={`https://wa.me/91${e.donor_mobile}`} target="_blank" rel="noreferrer" style={{marginLeft: '10px', color: '#25D366', textDecoration: 'none', fontSize: '1.1rem'}} title="Message Donor on WhatsApp">💬 WhatsApp</a>
+                    <p style={{ margin: '5px 0', color: '#424242' }}><b>Contact:</b> {e.donor_mobile}
+                      <a href={`https://wa.me/91${e.donor_mobile}`} target="_blank" rel="noreferrer" style={{ marginLeft: '10px', color: '#25D366', textDecoration: 'none', fontSize: '1.1rem' }} title="Message Donor on WhatsApp">💬 WhatsApp</a>
                     </p>
 
                     <button
                       style={styles.completeBtn}
                       onClick={() => completeDonation(e.request_id)}
-                      
-                      
+
+
                     >
                       ✅ Mark Donation as Completed
                     </button>
                   </div>
                 )}
-                
+
                 {e.status === "completed" && (
                   <p style={{ marginTop: '10px', color: '#2e7d32', fontWeight: 'bold', fontSize: '0.9rem' }}>
                     This emergency request has been successfully closed.
@@ -346,8 +351,8 @@ const HospitalDashboard = () => {
             localStorage.clear();
             navigate("/");
           }}
-          
-          
+
+
         >
           Logout & Exit Dashboard
         </button>
@@ -390,8 +395,8 @@ const styles = {
     boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
     transition: "transform 0.3s ease"
   },
-  title: { 
-    textAlign: "center", 
+  title: {
+    textAlign: "center",
     marginBottom: "30px",
     color: "#0d47a1",
     fontWeight: "800",
@@ -419,9 +424,9 @@ const styles = {
     boxShadow: "0 4px 15px rgba(13, 71, 161, 0.3)"
   },
   section: { marginBottom: "30px" },
-  select: { 
-    flex: 1, 
-    padding: "14px", 
+  select: {
+    flex: 1,
+    padding: "14px",
     borderRadius: "12px",
     border: "1px solid #ccc",
     fontSize: "1rem",
@@ -582,5 +587,6 @@ const animationCSS = `
   to { opacity: 1; transform: translateY(0); }
 }
 `;
+
 
 export default HospitalDashboard;

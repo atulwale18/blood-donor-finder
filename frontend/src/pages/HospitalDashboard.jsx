@@ -295,7 +295,10 @@ const HospitalDashboard = () => {
 
                     {(notifiedDonors[e.request_id] || []).map((d, i) => (
                       <div key={i} style={styles.donorCard}>
-                        <p style={{ margin: '0 0 5px 0', color: '#333' }}><b>👤 {d.name}</b></p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                          <p style={{ margin: '0', color: '#333' }}><b>👤 {d.name}</b></p>
+                          <span style={{ background: '#d32f2f', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>{d.blood_group}</span>
+                        </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#555', alignItems: 'center' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>📞 {d.mobile}
                             <a href={`https://wa.me/91${d.mobile}`} target="_blank" rel="noreferrer" style={{color: '#25D366', textDecoration: 'none', fontSize: '1.2rem'}} title="Message on WhatsApp">💬</a>

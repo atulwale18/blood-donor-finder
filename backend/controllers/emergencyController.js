@@ -56,6 +56,9 @@ const sendNotifications = async (donors, bloodGroup, hospitalName, requestId) =>
             requireInteraction: true,
             icon: "https://ai-powered-blood-donor-finder.vercel.app/final-icon-192.png",
             vibrate: [200, 100, 200, 100, 200]
+          },
+          data: {
+            click_action: `https://ai-powered-blood-donor-finder.vercel.app/donor/login?requestId=${requestId || ''}`
           }
         },
         token: donor.fcm_token

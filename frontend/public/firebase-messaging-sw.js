@@ -22,7 +22,7 @@ messaging.onBackgroundMessage((payload) => {
     requireInteraction: true,
     vibrate: [200, 100, 200, 100, 200, 100, 200],
     data: {
-      click_action: "/"
+      click_action: payload?.data?.click_action || "/"
     }
   };
 

@@ -218,11 +218,11 @@ exports.createEmergency = (req, res) => {
             d.fcm_token,
             d.mobile,
             u.email,
-            ( ST_Distance_Sphere(h.location, d.location) / 1000 ) AS distance,
+            ( ( 6371 * acos( cos( radians(h.latitude) ) * cos( radians( d.latitude ) ) * cos( radians( d.longitude ) - radians(h.longitude) ) + sin( radians(h.latitude) ) * sin( radians( d.latitude ) ) ) ) ) AS distance,
             
             /* AI Scoring: Distance weighted at 70%, Experience weighted at 30% */
             (
-              ( ST_Distance_Sphere(h.location, d.location) / 1000 ) * 0.7 
+              ( ( 6371 * acos( cos( radians(h.latitude) ) * cos( radians( d.latitude ) ) * cos( radians( d.longitude ) - radians(h.longitude) ) + sin( radians(h.latitude) ) * sin( radians( d.latitude ) ) ) ) ) * 0.7 
               + IF(d.last_donation_date IS NULL, 2.5, 0.0)
             ) AS smart_score
             
